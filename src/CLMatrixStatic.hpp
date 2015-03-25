@@ -37,10 +37,3 @@ namespace CPPLearn{
   };
 
 }
-
-
-
-
-
-
-
