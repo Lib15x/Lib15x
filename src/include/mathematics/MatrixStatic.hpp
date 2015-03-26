@@ -5,12 +5,16 @@ using namespace std;
 namespace CPPLearn{
 
   template <typename Type, unsigned Rows, unsigned Cols>
-  class CLMatrixStatic{
+  class MatrixStatic{
 
   public:
-    CLMatrixStatic() {
-      eigenMatrix.fill(0);
+    static MatrixStatic<Type, Rows, Cols> Identity() {
+      MatrixStatic<Type, Rows, Cols> identity;
+      identity.eigenMatrix=Eigen::Matrix<Type, Rows, Cols>::Identity();
+      return identity;
     }
+
+    MatrixStatic() {}
 
     size_t cols() const {
       return eigenMatrix.cols();
@@ -28,9 +32,25 @@ namespace CPPLearn{
       return eigenMatrix(rowIndex, colIndex);
     }
 
+    Type determinant(){
+      return eigenMatrix.determinant();
+    }
+
+    MatrixStatic<Type, Rows, Cols>
+    inverse(){
+      MatrixStatic<Type, Rows, Cols> inv;
+      inv.eigenMatrix=eigenMatrix.inverse();
+      return inv;
+    }
+
     void display() const {
       cout<<eigenMatrix<<endl;
     }
+
+    void fill(Type value){
+      eigenMatrix.fill(value);
+    }
+
 
   private:
     Eigen::Matrix<Type, Rows, Cols> eigenMatrix;

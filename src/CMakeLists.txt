@@ -12,7 +12,17 @@ ENDIF()
 MESSAGE( STATUS "EIGEN_DIR:         " ${EIGEN_DIR} )
 INCLUDE_DIRECTORIES(${EIGEN_DIR})
 
-set(CMAKE_CXX_FLAGS "-Wall -g -Wextra -O3 -DEIGEN_DEBUG -std=c++1y ${CMAKE_CXX_FLAGS}")
+#include google test
+SET( GTEST_ROOT "$ENV{GTEST_DIR}" )
+IF( NOT GTEST_ROOT )
+  MESSAGE( FATAL_ERROR "Please point the environment variable GTEST_DIR to the directory of your google test installation.")
+ENDIF()
+MESSAGE( STATUS "GTEST_DIR:           " ${GTEST_ROOT} )
+FIND_PACKAGE(GTest REQUIRED)
+INCLUDE_DIRECTORIES(${GTEST_INCLUDE_DIR})
+list(APPEND LIBS ${GTEST_BOTH_LIBRARIES})
+
+set(CMAKE_CXX_FLAGS "-Wall -g -Wextra -O3 -DEIGEN_DEBUG -std=c++1y -pthread ${CMAKE_CXX_FLAGS}")
 
 include (CTest)
 set (CTEST_PROJECT_NAME "CPPLearn")
@@ -22,7 +32,7 @@ include_directories(${CPPLearn_SOURCE_DIR}/include/)
 
 macro (add_executable_by_name name)
   ADD_EXECUTABLE(${name} ${name}.cc)
-  TARGET_LINK_LIBRARIES(${name})
+  TARGET_LINK_LIBRARIES(${name} ${LIBS})
 endmacro (add_executable_by_name)
 
 add_subdirectory(tests)
