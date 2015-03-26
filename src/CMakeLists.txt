@@ -18,7 +18,7 @@ include (CTest)
 set (CTEST_PROJECT_NAME "CPPLearn")
 enable_testing()
 
-include_directories(${CPPLearn_SOURCE_DIR})
+include_directories(${CPPLearn_SOURCE_DIR}/include/)
 
 macro (add_executable_by_name name)
   ADD_EXECUTABLE(${name} ${name}.cc)

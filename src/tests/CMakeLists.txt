@@ -5,6 +5,5 @@ macro (add_test_by_fail_regex name regex arguments)
     PROPERTIES FAIL_REGULAR_EXPRESSION ${regex})
 endmacro (add_test_by_fail_regex)
 
-
-# element tests
-add_test_by_fail_regex(Main "test failed" "")
+add_test_by_fail_regex(DenseStaticMatrix_unit "test failed" "")
+add_test_by_fail_regex(DenseDynamicMatrix_unit "test failed" "")
