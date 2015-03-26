@@ -1,0 +1,1 @@
+add_executable_by_name(Main1)

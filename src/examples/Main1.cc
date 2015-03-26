@@ -1,5 +1,5 @@
-#include "./CLMatrixStatic.hpp"
-#include "./CLMatrixDynamic.hpp"
+#include <core/CLMatrixStatic.hpp>
+#include <core/CLMatrixDynamic.hpp>
 #include <Eigen/Dense>
 using namespace CPPLearn;
 using namespace std;
