@@ -1,1 +1,2 @@
-#add_executable_by_name(Main1)
+add_executable_by_name(linear_ridge_regression)
+add_executable_by_name(cross_validation)
