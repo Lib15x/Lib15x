@@ -5,7 +5,7 @@ namespace CPPLearn{
   public:
     LinearRidgeRegression(const double regularizer_) : regularizer{regularizer_} {}
 
-    void trainModel(const MatrixXd& trainData, const VectorXd& trainLabel) {
+    void train(const MatrixXd& trainData, const VectorXd& trainLabel) {
       if (trainData.rows() != trainLabel.size())
         throw std::runtime_error("data and label size mismatch!");
 
@@ -20,8 +20,8 @@ namespace CPPLearn{
       if (!modelTrained)
         throw std::runtime_error("model has not been trained yet");
 
-          if (testData.cols() != parameters.size())
-            throw std::runtime_error("data and label size mismatch!");
+      if (testData.cols() != parameters.size())
+        throw std::runtime_error("data and label size mismatch!");
 
       VectorXd predictedLabel = testData*parameters;
       return predictedLabel;

@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
 
   double regularizer=0;
   LinearRidgeRegression linearRidgeRegression(regularizer);
-  CrossValidation<LinearRidgeRegression> crossValidation{&linearRidgeRegression};
+  CrossValidation<LinearRidgeRegression> crossValidation{linearRidgeRegression};
   try{
     VectorXd scores= crossValidation.computeValidationScores(data,labels);
     cout<<scores<<endl;

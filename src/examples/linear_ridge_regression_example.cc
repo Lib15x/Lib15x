@@ -18,12 +18,14 @@ int main(int argc, char* argv[]){
 
   double regularizer=0;
   LinearRidgeRegression linearRidgeRegression(regularizer);
+
   try{
-    linearRidgeRegression.trainModel(data, labels);
+    linearRidgeRegression.train(data, labels);
   } catch (std::exception &e){
     cout<<"there is a problem when training linear regression model!"<<endl;
     throw;
   }
+
   VectorXd predictedLabel=linearRidgeRegression.predict(data);
   cout<<(predictedLabel-labels).norm()<<endl;
 }

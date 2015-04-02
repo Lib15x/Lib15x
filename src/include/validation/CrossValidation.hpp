@@ -1,11 +1,10 @@
-#include <iostream>
+#include <core/Definitions.hpp>
 
 namespace CPPLearn{
   template<class LearningModel>
   class CrossValidation{
   public:
-
-    CrossValidation(LearningModel* learningModel_) : learningModel{learningModel_}{}
+    CrossValidation(LearningModel learningModel_) : learningModel{learningModel_}{}
     VectorXd computeValidationScores(const MatrixXd& data,
                                      const VectorXd& labels,
                                      const unsigned int numberOfFolds=5,
@@ -26,9 +25,9 @@ namespace CPPLearn{
       size_t firstRoundTestSize = numberOfData - unitTestSize*(numberOfFolds-1);
       size_t restDataSize = unitTestSize*(numberOfFolds-1);
 
-      learningModel->trainModel(data.bottomRows(restDataSize), labels.tail(restDataSize));
+      learningModel.train(data.bottomRows(restDataSize), labels.tail(restDataSize));
 
-      VectorXd predictedLabel = learningModel->predict(data.topRows(firstRoundTestSize));
+      VectorXd predictedLabel = learningModel.predict(data.topRows(firstRoundTestSize));
       scores(0)=(predictedLabel-labels.head(firstRoundTestSize)).norm();
 
       MatrixXd testData = data.block(firstRoundTestSize, 0, unitTestSize, numberOfFeatures);
@@ -39,8 +38,8 @@ namespace CPPLearn{
 
       size_t offset=0;
       for (size_t roundIndex=1; roundIndex<numberOfFolds; ++roundIndex){
-        learningModel->trainModel(trainData, trainLabel);
-        VectorXd predictedLabel = learningModel->predict(testData);
+        learningModel.train(trainData, trainLabel);
+        VectorXd predictedLabel = learningModel.predict(testData);
         scores(roundIndex) = (predictedLabel-testLabel).norm();
 
         if (roundIndex != numberOfFolds-1){
@@ -59,7 +58,7 @@ namespace CPPLearn{
     };
 
   private:
-    LearningModel* learningModel;
+    LearningModel learningModel;
   };
 
 }
