@@ -45,4 +45,3 @@ template <typename T, typename U, typename V, typename W>
 void ignoreUnusedVariables(const T & t, const U & u, const V & v, const W & w) {
 }
 #endif // DEFINITIONS_H
-

@@ -14,7 +14,7 @@ int main(int argc, char* argv[]){
   ignoreUnusedVariables(argc, argv);
   double gamma = 0.1;
   //double r = 1;
-	//unsigned d=2;
+  //unsigned d=2;
   Kernel kernel(gamma);
   double C=1.0;
   size_t numberOfFeatures=10;
@@ -28,6 +28,6 @@ int main(int argc, char* argv[]){
   MatrixXd testData=MatrixXd::Random(numberOfTests, numberOfFeatures);
   learningModel.train(trainData, trainLabels);
   VectorXd predictLables=learningModel.predict(testData);
-	cout<<predictLables<<endl;
+  cout<<predictLables<<endl;
 
 }

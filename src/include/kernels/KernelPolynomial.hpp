@@ -6,7 +6,8 @@ namespace CPPLearn{
     KernelPolynomial(double gamma_, double r_, unsigned d_) :
       gamma{gamma_}, r{r_}, d{d_} {
         if (gamma <= 0 || d == 0)
-          throw std::runtime_error("inconstructor of polynomial kernel, gamma and d should greater than zero!");
+          throw std::runtime_error("in constructor of polynomial kernel, "
+                                   "gamma and d should greater than zero!");
       }
 
     double operator()(const VectorXd& x, const VectorXd& y) const {
@@ -18,6 +19,7 @@ namespace CPPLearn{
         result *= base;
       return result;
     }
+
   private:
     double gamma;
     double r;

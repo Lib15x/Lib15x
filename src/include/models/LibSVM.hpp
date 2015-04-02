@@ -6,13 +6,15 @@ namespace CPPLearn{
   template<class Kernel>
   class LibSVM{
   public:
-    LibSVM(Kernel kernel_, double C_, size_t numberOfFeatures_, double tol_=1e-5) :
-      kernel{kernel_}, numberOfFeatures{numberOfFeatures_}, svmModel{nullptr}, C(C_),
-      numberOfTrainData{0}, tol{tol_} {}
+    LibSVM(Kernel kernel_, double C_,
+           size_t numberOfFeatures_, double tol_=1e-5) :
+      kernel{kernel_}, numberOfFeatures{numberOfFeatures_}, svmModel{nullptr},
+      C(C_), numberOfTrainData{0}, tol{tol_} {}
 
     void train(const MatrixXd& trainData, const VectorXd& trainLabels) {
       if (trainData.cols() != numberOfFeatures)
-        throw std::runtime_error("invalid inpute data, number of features mismatch!");
+        throw std::runtime_error("invalid inpute data, "
+                                 "number of features mismatch!");
 
       if (trainData.rows() != trainLabels.size())
         throw std::runtime_error("data and label size mismatch!");
@@ -30,7 +32,8 @@ namespace CPPLearn{
       svmProblem.l=numberOfTrainData;
       svmProblem.y=new double[numberOfTrainData];
       svmProblem.x=new libsvm::svm_node*[numberOfTrainData];
-      libsvm::svm_node* vector_x=new libsvm::svm_node[numberOfTrainData*(numberOfTrainData+1)];
+      libsvm::svm_node* vector_x=
+        new libsvm::svm_node[numberOfTrainData*(numberOfTrainData+1)];
 
       for (size_t dataIndex=0; dataIndex<numberOfTrainData; ++dataIndex){
         svmProblem.y[dataIndex]=trainLabels(dataIndex);
@@ -46,7 +49,8 @@ namespace CPPLearn{
             svmProblem.x[indexI][indexJ+1].value=kernel(trainData.row(indexI),
                                                         trainData.row(indexJ));
           else
-            svmProblem.x[indexI][indexJ+1].value=svmProblem.x[indexJ+1][indexI].value;
+            svmProblem.x[indexI][indexJ+1].value=
+              svmProblem.x[indexJ+1][indexI].value;
         }
 
       svmModel=svm_train(&svmProblem, &svmParameter);
@@ -64,7 +68,8 @@ namespace CPPLearn{
     }
 
     VectorXd predict(const MatrixXd& testData){
-      if (!modelTrained) throw std::runtime_error("model has not been trained yet");
+      if (!modelTrained)
+        throw std::runtime_error("model has not been trained yet");
 
       if (testData.cols()!=numberOfFeatures)
         throw std::runtime_error("number of features mismatich");

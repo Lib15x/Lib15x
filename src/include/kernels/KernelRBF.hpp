@@ -5,7 +5,8 @@ namespace CPPLearn{
   public:
     KernelRBF(double gamma_) : gamma(gamma_) {
       if (gamma<=0)
-				throw std::runtime_error("inconstructor of RBF kernel, gamma should greater than zero!");
+        throw std::runtime_error("inconstructor of RBF kernel, "
+                                 "gamma should greater than zero!");
     }
 
     double operator()(const VectorXd& x, const VectorXd& y) const {
