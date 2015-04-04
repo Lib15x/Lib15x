@@ -15,7 +15,7 @@
 #include <Eigen/Sparse>
 
 
-enum VerboseFlag {Quiet, Verbose};
+enum class VerboseFlag {Quiet, Verbose};
 
 using std::array;
 using std::vector;
@@ -44,4 +44,9 @@ void ignoreUnusedVariables(const T & t, const U & u, const V & v) {
 template <typename T, typename U, typename V, typename W>
 void ignoreUnusedVariables(const T & t, const U & u, const V & v, const W & w) {
 }
+
+char exceptionBuffer[10000];
+#define throwException(s, ...)                  \
+  sprintf(exceptionBuffer, s, ##__VA_ARGS__);   \
+  throw std::runtime_error(exceptionBuffer);
 #endif // DEFINITIONS_H

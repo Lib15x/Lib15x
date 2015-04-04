@@ -1,9 +1,11 @@
 #include <core/Definitions.hpp>
+#include <core/Utilities.hpp>
 #include <models/LibSVM.hpp>
 #include <kernels/KernelRBF.hpp>
 #include <kernels/KernelDot.hpp>
 #include <kernels/KernelSigmoid.hpp>
 #include <kernels/KernelPolynomial.hpp>
+#include <stdlib.h>
 
 using namespace CPPLearn;
 
@@ -12,22 +14,29 @@ using LearningModel=LibSVM<Kernel>;
 
 int main(int argc, char* argv[]){
   ignoreUnusedVariables(argc, argv);
-  double gamma = 0.1;
-  //double r = 1;
-  //unsigned d=2;
-  Kernel kernel(gamma);
-  double C=1.0;
-  size_t numberOfFeatures=10;
-  size_t numberOfData=20;
-  size_t numberOfTests=5;
 
-  LearningModel learningModel(kernel, C, numberOfFeatures);
-  MatrixXd trainData=MatrixXd::Random(numberOfData, numberOfFeatures);
-  VectorXd trainLabels=VectorXd::Random(numberOfData);
+  string inputfilename="../../data/libsvm/train.1";
+  string outputfilename="../../data/libsvm/train.1.cl";
+  Utilities::createCPPLearDataFileFromLibsvmFormat(inputfilename, outputfilename);
 
-  MatrixXd testData=MatrixXd::Random(numberOfTests, numberOfFeatures);
-  learningModel.train(trainData, trainLabels);
-  VectorXd predictLables=learningModel.predict(testData);
-  cout<<predictLables<<endl;
+  std::pair<MatrixXd, VectorXd> trainPair=
+    Utilities::readCPPLearnDataFile(outputfilename);
 
+  size_t numberOfFeatures=trainPair.first.cols();
+
+  double gamma=1.0/numberOfFeatures;
+  Kernel kernel{gamma};
+
+  LearningModel learningModel(kernel, numberOfFeatures);
+  learningModel.train(trainPair.first, trainPair.second);
+  VectorXd predictedLabels=learningModel.predict(trainPair.first);
+  FILE* file=fopen("output.pre","w");
+  if (!file) fprintf(file,"cannot open output file!");
+
+  size_t numberOfTests=predictedLabels.rows();
+  for (size_t i=0; i<numberOfTests; ++i)
+    fprintf(file, "%d\n", (int)predictedLabels(i));
+  fclose(file);
+
+  return 0;
 }
