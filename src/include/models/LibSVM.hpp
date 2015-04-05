@@ -1,5 +1,4 @@
 #include <core/Definitions.hpp>
-#include <core/Utilities.hpp>
 #include <external/svm.h>
 #include <external/svm.cpp>
 
