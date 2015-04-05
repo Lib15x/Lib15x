@@ -1,4 +1,3 @@
-// -*- C++ -*-
 #ifndef MODEL_LIBSVM
 #define MODEL_LIBSVM
 
@@ -9,14 +8,34 @@
 namespace CPPLearn{
   namespace Models{
 
+    /**
+     * A Support Vector Classifier based on libsvm implementation.
+     */
     template<class Kernel>
     class LibSVM{
     public:
+      /**
+       * Creates the model, with empty model initialized.
+       *
+       * @param kernel_ kernel function object used for transformation, typical
+       * types include linear, RBF or sigmoid.
+       * @param numberOfFeatures_ number of features of the model,
+       * required user provided befor hand.
+       * @param C_ regularization constant.
+       * @param tol_ stopping critiria.
+       */
       LibSVM(Kernel kernel_, size_t numberOfFeatures_,
              double C_=1.0, double tol_=1e-5) :
         kernel{kernel_}, numberOfFeatures{numberOfFeatures_}, svmModel{nullptr},
-        C(C_), numberOfTrainData{0}, tol{tol_} {}
+        C{C_}, numberOfTrainData{0}, tol{tol_} { }
 
+      /**
+       * Train the model, the provided data and labels should have the some number of instance.
+       *
+       * @param trainData predictors, the number of columns should be the
+       * same as number of features.
+       * @param trainLabels contains the labels used for training.
+       */
       void train(const MatrixXd& trainData, const VectorXd& trainLabels) {
         if (trainData.cols() != numberOfFeatures){
           throwException("Error happen when training model, invalid inpute data: "
@@ -98,7 +117,14 @@ namespace CPPLearn{
         delete[] vector_x;
       }
 
-      VectorXd predict(const MatrixXd& testData) const{
+      /**
+       * Calculate predictions based on trained model, returns the predicted
+       * labels. The model has to be trained first.
+       *
+       * @param testData predictors, the number of columns should be the
+       * same as number of features.
+       */
+      VectorXd predict(const MatrixXd& testData) const {
         if (!modelTrained){
           throwException("model has not been trained yet!");
         }
@@ -129,6 +155,26 @@ namespace CPPLearn{
         return predictedLabels;
       }
 
+      /**
+       * Each row is a SV.
+       */
+      MatrixXd getSupportVectors() const {
+        if (!modelTrained){
+          throwException("model has not been trained yet!");
+        }
+
+        size_t numberOfSVs=supportVectors.size();
+
+        MatrixXd supportVectorData(numberOfSVs, numberOfFeatures);
+        for (size_t svIndex=0; svIndex<numberOfSVs; ++svIndex)
+          supportVectorData.row(svIndex)=supportVectors[svIndex].second;
+
+        return supportVectorData;
+      };
+
+      /**
+       * Clear the model.
+       */
       void clear(){
         libsvm::svm_free_and_destroy_model(&svmModel);
         svmModel=nullptr;
@@ -137,11 +183,9 @@ namespace CPPLearn{
         modelTrained=false;
       }
 
-      vector<std::pair<size_t, VectorXd>>
-        getSupportVectors() const {
-        return supportVectors;
-      };
-
+      /**
+       * Destructor.
+       */
       ~LibSVM(){
         libsvm::svm_free_and_destroy_model(&svmModel);
       }
@@ -149,12 +193,17 @@ namespace CPPLearn{
     private:
       const Kernel kernel;
       const size_t numberOfFeatures;
+      //! SVM model defined in the libsvm library.
       libsvm::svm_model* svmModel;
+      //! Support vectors use libsvm index convenstion.
       vector<std::pair<size_t, VectorXd>> supportVectors;
+      //! regularization parameter.
       double C;
       size_t numberOfTrainData;
       double tol;
+      //! Indicates whether the model has been trained.
       bool modelTrained=false;
+      //! cache size (MB) use by libsvm train.
       double cacheSize=100;
     };
   }
