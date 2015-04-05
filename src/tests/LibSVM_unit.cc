@@ -2,8 +2,8 @@
 #include <core/Utilities.hpp>
 #include <kernels/KernelRBF.hpp>
 #include <models/LibSVM.hpp>
-
 #include <gtest/gtest.h>
+
 using namespace CPPLearn;
 
 using Kernel=KernelRBF;
@@ -16,20 +16,18 @@ TEST(LibSVM, train_test) {
 
   std::pair<MatrixXd, VectorXd> trainPair=
     Utilities::readCPPLearnDataFile(trainfilename);
-
   std::pair<MatrixXd, VectorXd> testPair=
     Utilities::readCPPLearnDataFile(testfilename);
 
   EXPECT_EQ(trainPair.first.cols(), testPair.first.cols());
 
   size_t numberOfFeatures=trainPair.first.cols();
-
   double gamma=1.0/numberOfFeatures;
+
   Kernel kernel{gamma};
-
   LearningModel learningModel{kernel, numberOfFeatures};
-  learningModel.train(trainPair.first, trainPair.second);
 
+  learningModel.train(trainPair.first, trainPair.second);
   VectorXd predictedLabels=learningModel.predict(testPair.first);
 
   ifstream labelfile;
