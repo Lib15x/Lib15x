@@ -9,8 +9,8 @@
 
 using namespace CPPLearn;
 
-using Kernel=KernelRBF;
-using LearningModel=LibSVM<Kernel>;
+using Kernel=Kernels::RBF;
+using LearningModel=Models::LibSVM<Kernel>;
 
 int main(int argc, char* argv[]){
   ignoreUnusedVariables(argc, argv);

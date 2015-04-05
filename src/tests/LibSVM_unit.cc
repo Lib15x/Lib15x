@@ -6,8 +6,8 @@
 
 using namespace CPPLearn;
 
-using Kernel=KernelRBF;
-using LearningModel=LibSVM<Kernel>;
+using Kernel=Kernels::RBF;
+using LearningModel=Models::LibSVM<Kernel>;
 
 TEST(LibSVM, train_test) {
   string trainfilename="../../data/test/libsvm_train_1.cl";

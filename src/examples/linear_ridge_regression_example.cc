@@ -2,6 +2,7 @@
 #include <models/LinearRidgeRegression.hpp>
 
 using namespace CPPLearn;
+using LearningModel=Models::LinearRidgeRegression;
 
 int main(int argc, char* argv[]){
   ignoreUnusedVariables(argc, argv);
@@ -17,7 +18,7 @@ int main(int argc, char* argv[]){
     labels(index) += distribution(generator);
 
   double regularizer=0;
-  LinearRidgeRegression linearRidgeRegression(regularizer);
+  LearningModel linearRidgeRegression(regularizer);
 
   try{
     linearRidgeRegression.train(data, labels);

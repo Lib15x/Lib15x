@@ -3,6 +3,7 @@
 #include <validation/CrossValidation.hpp>
 
 using namespace CPPLearn;
+using LearningModel=Models::LinearRidgeRegression;
 
 int main(int argc, char* argv[]){
   ignoreUnusedVariables(argc, argv);
@@ -23,8 +24,8 @@ int main(int argc, char* argv[]){
     labels(index) += distribution(generator);
 
   double regularizer=0;
-  LinearRidgeRegression linearRidgeRegression(regularizer);
-  CrossValidation<LinearRidgeRegression> crossValidation{linearRidgeRegression};
+  LearningModel linearRidgeRegression(regularizer);
+  CrossValidation<LearningModel> crossValidation{linearRidgeRegression};
   try{
     VectorXd scores= crossValidation.computeValidationScores(data,labels);
     cout<<scores<<endl;
