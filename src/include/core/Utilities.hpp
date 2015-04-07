@@ -157,7 +157,7 @@ namespace Utilities {
   }
 
 
-  void createCPPLearDataFileFromLibsvmFormat(const string& libsvmFormatFileName,
+  void createCPPLearnDataFileFromLibsvmFormat(const string& libsvmFormatFileName,
                                              const string& cpplearnFileName,
                                              const VerboseFlag verboseFlag=VerboseFlag::Verbose){
     ifstream inputFile;

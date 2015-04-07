@@ -17,7 +17,7 @@ int main(int argc, char* argv[]){
 
   string inputfilename="../../data/libsvm/train.1";
   string outputfilename="../../data/libsvm/train.1.cl";
-  Utilities::createCPPLearDataFileFromLibsvmFormat(inputfilename, outputfilename);
+  Utilities::createCPPLearnDataFileFromLibsvmFormat(inputfilename, outputfilename);
 
   std::pair<MatrixXd, VectorXd> trainPair=
     Utilities::readCPPLearnDataFile(outputfilename);
