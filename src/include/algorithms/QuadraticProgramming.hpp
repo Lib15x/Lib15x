@@ -11,6 +11,7 @@ namespace CPPLearn{
 
     class QuadraticProgramming : public TNLP {
     public:
+      /** constructor */
       QuadraticProgramming(const MatrixXd* Q_, const VectorXd* c_,
                            const MatrixXd* G_, const VectorXd* gL_, const VectorXd* gU_,
                            const VectorXd* xL_, const VectorXd* xU_,
@@ -28,17 +29,9 @@ namespace CPPLearn{
       virtual bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
                                 Index& nnz_h_lag, IndexStyleEnum& index_style){
         n = numberOfDimensions;
-
         m = numberOfAffineConstraints;
-
-        // in this example the jacobian is dense and contains 8 nonzeros
         nnz_jac_g = n*m;
-
-        // the hessian is also dense and has 16 total nonzeros, but we
-        // only need the lower left corner (since it is symmetric)
         nnz_h_lag = n*(n+1)/2;
-
-        // use the C style indexing (0-based)
         index_style = TNLP::C_STYLE;
 
         return true;
@@ -50,7 +43,6 @@ namespace CPPLearn{
         assert(n == numberOfDimensions);
         assert(m == numberOfAffineConstraints);
 
-        // the variables have lower bounds of 1
         for (Index i=0; i<n; ++i) {
           x_l[i] = (*xL)(i);
           x_u[i] = (*xU)(i);
@@ -60,6 +52,7 @@ namespace CPPLearn{
           g_l[i]= (*gL)(i);
           g_u[i]= (*gU)(i);
         }
+
         return true;
       }
 
@@ -111,15 +104,16 @@ namespace CPPLearn{
         return true;
       }
 
+      /** Method to return:
+       *   1) The structure of the jacobian (if "values" is NULL)
+       *   2) The values of the jacobian (if "values" is not NULL)
+       */
       virtual bool eval_jac_g(Index n, const Number* x, bool new_x,
                               Index m, Index nele_jac, Index* iRow, Index *jCol,
                               Number* values){
         assert(n == numberOfDimensions);
         assert(m == numberOfAffineConstraints);
         if (values == NULL) {
-          // return the structure of the jacobian
-
-          // this particular jacobian is dense
           Index entryIndex=0;
           for (Index rowIndex=0; rowIndex<m; ++rowIndex)
             for (Index colIndex=0; colIndex<n; ++colIndex){
@@ -131,9 +125,14 @@ namespace CPPLearn{
           Map<MatrixXd> value_map(values, n, m);
           value_map=(*G).transpose();
         }
+
         return true;
       }
 
+      /** Method to return:
+       *   1) The structure of the hessian of the lagrangian (if "values" is NULL)
+       *   2) The values of the hessian of the lagrangian (if "values" is not NULL)
+       */
       virtual bool eval_h(Index n, const Number* x, bool new_x,
                           Number obj_factor, Index m, const Number* lambda,
                           bool new_lambda, Index nele_hess, Index* iRow,
@@ -152,15 +151,18 @@ namespace CPPLearn{
         else {
           Index id=0;
           for (Index rowId=0; rowId<n; ++rowId)
-          for (Index colId=0; colId<=rowId; ++colId){
-          values[id]=(*Q)(rowId, colId);
-          ++id;
-          }
+            for (Index colId=0; colId<=rowId; ++colId){
+              values[id]=obj_factor*(*Q)(rowId, colId);
+              ++id;
+            }
           assert(id == nele_hess);
         }
         return true;
       }
 
+      /** @name Solution Methods */
+      //@{
+      /** This method is called when the algorithm is complete so the TNLP can store/write the solution */
       virtual void finalize_solution(SolverReturn status,
                                      Index n, const Number* x, const Number* z_L,
                                      const Number* z_U, Index m,
@@ -247,23 +249,6 @@ namespace CPPLearn{
                        numberOfDimensions, xL.size(), xU.size());
       }
 
-      //VectorXd GX=G*startPoint;
-      //for (unsigned index=0; index<c.size(); ++index)
-      //if (startPoint(index) > xU(index) || startPoint(index) < xL(index)){
-      //throwException("Initial iteration point is not a feasible point. "
-      //"CPPlearn generate zero vector as intial point,"
-      //"you may need to provide an initial feasibel point "
-      //"in order to start the iteration.\n");
-      //}
-      //
-      //for (unsigned index=0; index<gL.size(); ++index)
-      //if (GX(index) > gU(index) || GX(index) < gL(index)){
-      //throwException("Initial iteration point is not a feasible point. "
-      //"CPPlearn generate zero vector as intial point,"
-      //"you may need to provide an initial feasibel point "
-      //"in order to start the iteration.\n");
-      //}
-
       SmartPtr<QuadraticProgramming> qp = new QuadraticProgramming(&Q, &c,
                                                                    &G, &gL, &gU,
                                                                    &xL, &xU,
@@ -274,9 +259,8 @@ namespace CPPLearn{
 
       app->Options()->SetNumericValue("tol", tol);
       app->Options()->SetStringValue("mu_strategy", "adaptive");
-      app->Options()->SetStringValue("derivative_test", "second-order");
-      app->Options()->SetStringValue("derivative_test_print_all", "yes");
-      //app->Options()->SetStringValue("output_file", "ipopt.out");
+      //app->Options()->SetStringValue("derivative_test", "second-order");
+      //app->Options()->SetStringValue("derivative_test_print_all", "yes");
       ApplicationReturnStatus status;
       status = app->Initialize();
       if (status != Solve_Succeeded) {
@@ -312,7 +296,7 @@ namespace CPPLearn{
                                        const MatrixXd& G, const VectorXd& gL, const VectorXd& gU,
                                        const VectorXd& xL, const VectorXd& xU){
       double tol=1e-7;
-      VectorXd startPoint=VectorXd::Random(c.size());
+      VectorXd startPoint=VectorXd::Zero(c.size());
       return SolveQudraticProgramming(Q, c, G, gL, gU, xL, xU, startPoint,tol);
     }
 
