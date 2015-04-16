@@ -21,7 +21,23 @@ MESSAGE( STATUS "GTEST_DIR:           " ${GTEST_ROOT} )
 FIND_PACKAGE(GTest REQUIRED)
 INCLUDE_DIRECTORIES(${GTEST_INCLUDE_DIR})
 list(APPEND LIBS ${GTEST_BOTH_LIBRARIES})
+find_package(BLAS REQUIRED)
+list(APPEND LIBS ${BLAS_LIBRARIES})
+#MESSAGE( ${LIBS})
 
+#include optimization library ipopt
+SET( IPOPT_DIR "$ENV{IPOPT_DIR}" )
+IF( NOT IPOPT_DIR )
+    MESSAGE( FATAL_ERROR "Please point the environment variable IPOPT_DIR to the directory of your Ipopt installation.")
+ENDIF()
+MESSAGE( STATUS "IPOPT_DIR:       " ${IPOPT_DIR} )
+INCLUDE_DIRECTORIES(${IPOPT_DIR}/include/coin)
+LINK_DIRECTORIES(${IPOPT_DIR}/lib)
+list(APPEND LIBS "-lipopt")
+
+
+
+#set compilation flag
 set(CMAKE_CXX_FLAGS "-Wall -g -Wextra -O3 -DEIGEN_DEBUG -std=c++1y -pthread ${CMAKE_CXX_FLAGS}")
 
 include (CTest)

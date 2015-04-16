@@ -23,9 +23,11 @@ using std::string;
 using std::ifstream;
 using std::cout;
 using std::endl;
+using std::size_t;
 using Eigen::Matrix;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
+using Eigen::Map;
 
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
