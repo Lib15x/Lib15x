@@ -6,3 +6,4 @@ macro (add_test_by_fail_regex name regex arguments)
 endmacro (add_test_by_fail_regex)
 
 add_test_by_fail_regex(LibSVM_unit "test failed" "")
+add_test_by_fail_regex(SupportVectorClassifier_unit "test failed" "")

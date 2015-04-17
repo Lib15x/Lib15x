@@ -2,14 +2,14 @@
 #include <core/Utilities.hpp>
 #include <kernels/KernelRBF.hpp>
 #include <kernels/KernelDot.hpp>
-#include <models/LibSVM.hpp>
+#include <models/SupportVectorClassifier.hpp>
 #include <gtest/gtest.h>
 
 using namespace CPPLearn;
 
-TEST(LibSVM, RBFKernel_test) {
+TEST(SupportVectorClassifier, RBFKernel_test) {
   using Kernel=Kernels::RBF;
-  using LearningModel=Models::LibSVM<Kernel>;
+  using LearningModel=Models::SupportVectorClassifier<Kernel>;
 
   MatrixXd data(9,2);
   data<< 1,1,
@@ -21,8 +21,10 @@ TEST(LibSVM, RBFKernel_test) {
     4, 1,
     4, 3,
     5, 5;
+
   VectorXd labels(9);
   labels<<1, 1, 1, 1, 1, 0, 0, 0, 0;
+
   size_t numberOfFeatures=data.cols();
   size_t numberOfData=data.rows();
 
@@ -37,9 +39,9 @@ TEST(LibSVM, RBFKernel_test) {
     EXPECT_EQ(labels[testIndex], predictedLabels(testIndex));
 }
 
-TEST(LibSVM, DotKernel_test) {
+TEST(SupportVectorClassifier, DotKernel_test) {
   using Kernel=Kernels::Dot;
-  using LearningModel=Models::LibSVM<Kernel>;
+  using LearningModel=Models::SupportVectorClassifier<Kernel>;
 
   MatrixXd data(9,2);
   data<< 1,1,

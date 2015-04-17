@@ -1,4 +1,4 @@
 add_executable_by_name(linear_ridge_regression_example)
 add_executable_by_name(cross_validation_example)
 add_executable_by_name(lib_svm_example)
-add_executable_by_name(quadratic_programming_example)
+add_executable_by_name(support_vector_classifier_example)
