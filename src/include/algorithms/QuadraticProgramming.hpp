@@ -215,9 +215,9 @@ namespace CPPLearn{
       const Ipopt::Index numberOfDimensions;
       const Ipopt::Index numberOfAffineConstraints;
       bool solvedFlag=false;
-
       const VectorXd* startPoint;
       OptSolution solution;
+
     private:
       QuadraticProgramming(const QuadraticProgramming&);
       QuadraticProgramming& operator=(const QuadraticProgramming&);
@@ -282,6 +282,7 @@ namespace CPPLearn{
 
       app->Options()->SetNumericValue("tol", tol);
       app->Options()->SetStringValue("mu_strategy", "adaptive");
+      app->Options()->SetStringValue("hessian_approximation", "limited-memory");
       //app->Options()->SetIntegerValue("print_level", 5);
       //app->Options()->SetStringValue("derivative_test", "second-order");
       //app->Options()->SetStringValue("derivative_test_print_all", "yes");

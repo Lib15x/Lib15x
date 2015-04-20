@@ -24,7 +24,7 @@ namespace CPPLearn{
        * @param tol_ stopping critiria.
        */
       SupportVectorClassifier(Kernel kernel_, size_t numberOfFeatures_,
-                              double C_=1.0, double tol_=1e-5) :
+                              double C_=1.0, double tol_=1e-7) :
         kernel{kernel_}, numberOfFeatures{numberOfFeatures_}, C{C_}, tol{tol_} { }
 
       /**
@@ -152,7 +152,7 @@ namespace CPPLearn{
         modelTrained=false;
       }
 
-      bool& whetherPrintOutOptInfo(){
+      bool& printOptimizationProgress(){
         return moreOptInfo;
       }
 
