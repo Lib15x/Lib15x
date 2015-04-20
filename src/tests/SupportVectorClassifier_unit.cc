@@ -60,8 +60,9 @@ TEST(SupportVectorClassifier, DotKernel_test) {
   size_t numberOfFeatures=data.cols();
   size_t numberOfData=data.rows();
 
+  double C=1e5;
   Kernel kernel;
-  LearningModel learningModel{kernel, numberOfFeatures, 1e5};
+  LearningModel learningModel{kernel, numberOfFeatures, C};
 
   learningModel.train(data, labels);
   VectorXd predictedLabels=learningModel.predict(data);
