@@ -139,25 +139,37 @@ namespace CPPLearn{
         size_t numberOfTests=testData.rows();
         VectorXd predictedLabels(numberOfTests);
 
+        for (size_t rowIndex=0; rowIndex<numberOfTests; ++rowIndex)
+          predictedLabels(rowIndex) = predictOne(testData.row(rowIndex));
+
+        return predictedLabels;
+      }
+
+      double predictOne(const VectorXd& instance) const {
+
         libsvm::svm_node* kerVec=new libsvm::svm_node[numberOfTrainData+2];
         kerVec[numberOfTrainData+1].index=-1;
         kerVec[numberOfTrainData+1].value=0;
         kerVec[0].index=0;
-        for (size_t rowIndex=0; rowIndex<numberOfTests; ++rowIndex){
-          for (auto sv : supportVectors){
-            kerVec[sv.first].index=sv.first;
-            kerVec[sv.first].value=kernel(testData.row(rowIndex), sv.second);
-          }
-          predictedLabels(rowIndex) = libsvm::svm_predict(svmModel,kerVec);
+
+        for (auto sv : supportVectors){
+          kerVec[sv.first].index=sv.first;
+          kerVec[sv.first].value=kernel(instance, sv.second);
         }
 
+        double result = libsvm::svm_predict(svmModel,kerVec);
+
         delete[] kerVec;
-        return predictedLabels;
+        return result;
       }
 
       /**
        * Each row is a SV.
        */
+
+      const size_t& getNumberOfFeatures() const {
+        return numberOfFeatures;
+      }
       MatrixXd getSupportVectors() const {
         if (!modelTrained){
           throwException("model has not been trained yet!");
