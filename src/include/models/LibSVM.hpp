@@ -95,7 +95,8 @@ namespace CPPLearn{
         svmModel=svm_train(&svmProblem, &svmParameter);
 
         //copy SV into model struct
-        libsvm::svm_node* vector_sv = new libsvm::svm_node[svmModel->l];
+        libsvm::svm_node* vector_sv =
+          (libsvm::svm_node*)malloc(svmModel->l*sizeof(libsvm::svm_node));
         for (size_t svIndex=0; svIndex<svmModel->l; ++svIndex){
           (vector_sv + svIndex)->index=0;
           (vector_sv + svIndex)->value=svmModel->SV[svIndex]->value;
@@ -195,6 +196,10 @@ namespace CPPLearn{
         modelTrained=false;
       }
 
+      VerboseFlag& whetherVerbose(){
+        return verbose;
+      }
+
       /**
        * Destructor.
        */
@@ -217,6 +222,7 @@ namespace CPPLearn{
       bool modelTrained=false;
       //! cache size (MB) use by libsvm train.
       double cacheSize=100;
+      VerboseFlag verbose = VerboseFlag::Quiet;
     };
   }
 }

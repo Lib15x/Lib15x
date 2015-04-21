@@ -33,9 +33,14 @@ int main(int argc, char* argv[]){
   VectorXd predictedLabels=learningModel.predict(trainPair.first);
   t=clock()-t;
   printf ("It took me %ld clicks (%f seconds) for predicting.\n",t,((float)t)/CLOCKS_PER_SEC);
-  cout<<predictedLabels<<endl;
 
-  double mismatch=(predictedLabels-trainPair.second).squaredNorm();
-  cout<<mismatch/trainPair.second.size()<<endl;
+  unsigned numberOfMatches=0;
+  for (unsigned index=0; index<trainPair.second.size(); ++index){
+    numberOfMatches+=(predictedLabels[index]==trainPair.second[index]);
+  }
+
+  double accuracy=double(numberOfMatches)/trainPair.second.size()*100;
+  printf("accuracy = %f%%, (%u / %lu)\n", accuracy, numberOfMatches, trainPair.second.size());
+
   return 0;
 }
