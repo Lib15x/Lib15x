@@ -153,7 +153,7 @@ namespace CPPLearn{
         kerVec[numberOfTrainData+1].value=0;
         kerVec[0].index=0;
 
-        for (auto sv : supportVectors){
+        for (auto& sv : supportVectors){
           kerVec[sv.first].index=sv.first;
           kerVec[sv.first].value=kernel(instance, sv.second);
         }
@@ -167,7 +167,6 @@ namespace CPPLearn{
       /**
        * Each row is a SV.
        */
-
       const size_t& getNumberOfFeatures() const {
         return numberOfFeatures;
       }
