@@ -14,11 +14,7 @@ using MulticlassModel=Models::MulticlassClassifier<BinaryModel>;
 int main(int argc, char* argv[]){
   ignoreUnusedVariables(argc, argv);
 
-  string inputfilename="../../data/libsvm/glass.scale";
-  string outputfilename="../../data/libsvm/glass.scale.cl";
-  Utilities::createCPPLearnDataFileFromLibsvmFormat(inputfilename, outputfilename);
-
-  string trainfilename=outputfilename;
+  string trainfilename="../../data/libsvm/train.2.cl";
 
   std::pair<MatrixXd, VectorXd> trainPair=
     Utilities::readCPPLearnDataFile(trainfilename);
@@ -28,12 +24,14 @@ int main(int argc, char* argv[]){
 
   Kernel kernel{gamma};
   BinaryModel binaryModel{kernel, numberOfFeatures};
-  MulticlassModel multiclassModel{7, binaryModel};
+  MulticlassModel multiclassModel{3, binaryModel};
 
   clock_t t;
   t=clock();
   for (unsigned index=0; index<trainPair.second.size(); ++index)
     trainPair.second[index]-=1;
+
+  multiclassModel.whetherVerbose() = VerboseFlag::Verbose;
 
   multiclassModel.train(trainPair.first, trainPair.second);
   t=clock()-t;
@@ -44,12 +42,13 @@ int main(int argc, char* argv[]){
   t=clock()-t;
   printf ("It took me %ld clicks (%f seconds) for predicting.\n",t,((float)t)/CLOCKS_PER_SEC);
 
-  unsigned mismatch=0;
+  unsigned numberOfMatches=0;
   for (unsigned index=0; index<trainPair.second.size(); ++index){
-    mismatch+=(predictedLabels[index]!=trainPair.second[index]);
+    numberOfMatches+=(predictedLabels[index]==trainPair.second[index]);
   }
-  cout<<"accuracy= "<<1-double(mismatch)/trainPair.second.size()<<endl;
 
+  double accuracy=double(numberOfMatches)/trainPair.second.size()*100;
+  printf("accuracy = %f%%, (%u / %lu)\n", accuracy, numberOfMatches, trainPair.second.size());
 
   return 0;
 }
