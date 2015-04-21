@@ -2,10 +2,6 @@
 #include <core/Utilities.hpp>
 #include <models/LibSVM.hpp>
 #include <kernels/KernelRBF.hpp>
-#include <kernels/KernelDot.hpp>
-#include <kernels/KernelSigmoid.hpp>
-#include <kernels/KernelPolynomial.hpp>
-#include <stdlib.h>
 
 using namespace CPPLearn;
 
@@ -15,28 +11,31 @@ using LearningModel=Models::LibSVM<Kernel>;
 int main(int argc, char* argv[]){
   ignoreUnusedVariables(argc, argv);
 
-  string inputfilename="../../data/libsvm/train.1";
-  string outputfilename="../../data/libsvm/train.1.cl";
-  Utilities::createCPPLearnDataFileFromLibsvmFormat(inputfilename, outputfilename);
+  string trainfilename="../../data/test/libsvm_train_1.cl";
 
   std::pair<MatrixXd, VectorXd> trainPair=
-    Utilities::readCPPLearnDataFile(outputfilename);
+    Utilities::readCPPLearnDataFile(trainfilename);
 
   size_t numberOfFeatures=trainPair.first.cols();
-
   double gamma=1.0/numberOfFeatures;
+
   Kernel kernel{gamma};
+  LearningModel learningModel{kernel, numberOfFeatures};
 
-  LearningModel learningModel(kernel, numberOfFeatures);
+  clock_t t;
+  t=clock();
   learningModel.train(trainPair.first, trainPair.second);
+  t=clock()-t;
+  printf ("It took me %ld clicks (%f seconds) for training.\n",t,((float)t)/CLOCKS_PER_SEC);
+  cout<<"number of support vectors: "<<learningModel.getSupportVectors().rows()<<endl;
+
+  t=clock();
   VectorXd predictedLabels=learningModel.predict(trainPair.first);
-  FILE* file=fopen("output.pre","w");
-  if (!file) fprintf(file,"cannot open output file!");
+  t=clock()-t;
+  printf ("It took me %ld clicks (%f seconds) for predicting.\n",t,((float)t)/CLOCKS_PER_SEC);
+  cout<<predictedLabels<<endl;
 
-  size_t numberOfTests=predictedLabels.rows();
-  for (size_t i=0; i<numberOfTests; ++i)
-    fprintf(file, "%d\n", (int)predictedLabels(i));
-  fclose(file);
-
+  double mismatch=(predictedLabels-trainPair.second).squaredNorm();
+  cout<<mismatch/trainPair.second.size()<<endl;
   return 0;
 }

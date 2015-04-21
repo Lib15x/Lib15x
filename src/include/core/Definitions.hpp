@@ -16,7 +16,6 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/Sparse>
 
-
 //make_unique function from effective morden c++ by Scott Meyers
 namespace std{
   template<typename T, typename... Ts>
