@@ -159,7 +159,7 @@ namespace CPPLearn{
 
     void createCPPLearnDataFileFromLibsvmFormat(const string& libsvmFormatFileName,
                                                 const string& cpplearnFileName,
-                                                const VerboseFlag verboseFlag=VerboseFlag::Verbose){
+                                                const VerboseFlag verboseFlag=VerboseFlag::Quiet){
       ifstream inputFile;
       inputFile.open(libsvmFormatFileName);
 
@@ -230,7 +230,7 @@ namespace CPPLearn{
         cout<<"Data is written to "<<cpplearnFileName<<endl;
         cout<<"Summary:"<<endl;
         cout<<"Number of data = "<<numberOfData<<endl;
-        cout<<"Number of features = "<<numberOfFeatures<<endl;
+        cout<<"Number of features = "<<numberOfFeatures<<endl<<endl;;
       }
     }
 
