@@ -74,8 +74,16 @@ namespace CPPLearn{
           ++labelsCount[trainLabels(labelIndex)];
         }
 
+        for (size_t classIndex=0; classIndex<numberOfClasses; ++classIndex)
+          if (labelsCount[classIndex] == 0){
+            throwException("Error happened from Multiclass classifer:\n"
+                           "None of the provided training data is classified to class (%lu). "
+                           "You need to consider reducing the input number of classes!\n",
+                           classIndex);
+          }
+
         if(verbose == VerboseFlag::Verbose){
-          cout<<"Multiclass training input label summary: "<<endl;
+          cout<<"In Mulicalss Classifier, Multiclass training input label summary: "<<endl;
           cout<<"number of classes: "<<numberOfClasses<<endl;
           cout<<"number of training data: "<<numberOfTrainData<<endl;
           for (size_t classIndex=0; classIndex<numberOfClasses; ++classIndex)
@@ -159,7 +167,6 @@ namespace CPPLearn{
                    "for test data NO. (%lu) is not unique. "
                    "I choose to predict label (%lu) since it is smaller in numeric order.\n",
                    testIndex, maxpos-votes.begin());
-
           predictedLabels(testIndex)=maxpos-votes.begin();
         }
 
@@ -176,6 +183,10 @@ namespace CPPLearn{
         modelTrained=false;
       }
 
+      VerboseFlag& whetherVerbose(){
+        return verbose;
+      }
+
       /**
        * Destructor.
        */
@@ -185,7 +196,6 @@ namespace CPPLearn{
       const size_t numberOfFeatures;
       const size_t numberOfClasses;
       vector<ModelPtr> binaryModels;
-      //! Indicates whether the model has been trained.
       bool modelTrained=false;
       VerboseFlag verbose = VerboseFlag::Quiet;
     };
