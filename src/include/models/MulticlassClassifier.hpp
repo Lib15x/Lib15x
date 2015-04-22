@@ -132,13 +132,13 @@ namespace CPPLearn{
        */
       VectorXd predict(const MatrixXd& testData) const {
         if (!modelTrained){
-          throwException("Error happen when training multiclass classifier: "
+          throwException("Error happen when predicting with multiclass classifier: "
                          "model has not been trained yet!");
         }
 
         if (testData.cols() != numberOfFeatures){
-          throwException("Error happen when training multiclass classifier: "
-                         "invalid inpute data: "
+          throwException("Error happen when predicting with multiclass classifier: "
+                         "Invalid inpute data: "
                          "expecting number of features from model: (%lu); "
                          "privided number of features from data: (%lu).\n",
                          numberOfFeatures, testData.cols());

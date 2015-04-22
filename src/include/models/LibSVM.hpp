@@ -127,11 +127,13 @@ namespace CPPLearn{
        */
       VectorXd predict(const MatrixXd& testData) const {
         if (!modelTrained){
-          throwException("model has not been trained yet!");
+          throwException("Error happen when predicting with LibSVM model: "
+                         "Model has not been trained yet!");
         }
 
         if (testData.cols() != numberOfFeatures){
-          throwException("Error happen when predicting, invalid inpute data: "
+          throwException("Error happen when predicting with LibSVM: "
+                         "Invalid inpute data, "
                          "expecting number of features from model: (%lu); "
                          "privided number of features from data: (%lu).\n",
                          numberOfFeatures, testData.cols());
