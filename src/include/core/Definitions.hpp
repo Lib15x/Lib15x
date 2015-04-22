@@ -40,7 +40,7 @@ namespace CPPLearn{
   using std::make_unique;
 
   using Eigen::Matrix;
-  using Eigen::MatrixXd;
+  using MatrixXd=Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
   using Eigen::VectorXd;
   using Eigen::Map;
 
