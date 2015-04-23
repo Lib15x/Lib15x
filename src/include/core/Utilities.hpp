@@ -175,12 +175,14 @@ namespace CPPLearn{
       if (verboseFlag==VerboseFlag::Verbose)
         cout<<"Begin read data from: "<<libsvmFormatFileName<<endl;
 
+      std::set<int> labelTypes;
       while (inputFile.good()) {
         getline (inputFile,line);
         if (line == "") break;
         vector<double> instance;
         vector<string> tokens = Utilities::tokenize(line, " ", Utilities::TrimStyle::Trim);
-        labels.push_back(atof(tokens[0].c_str()));
+        labels.push_back(atoi(tokens[0].c_str()));
+        labelTypes.insert(atoi(tokens[0].c_str()));
 
         size_t featIndex = 0;
         for (size_t tokIndex=1; tokIndex<tokens.size(); ++tokIndex){
@@ -200,6 +202,14 @@ namespace CPPLearn{
         data.push_back(std::move(instance));
       }
 
+      unsigned labelCount=0;
+      std::map<int, unsigned> labelMap;
+      for (auto& label : labelTypes){
+        labelMap.insert(std::pair<int, unsigned>(label, labelCount));
+        ++labelCount;
+      }
+      assert(labelCount==labelTypes.size());
+
       size_t numberOfData=labels.size();
       FILE* outfile=fopen(cpplearnFileName.c_str(),"w");
       if (!outfile){
@@ -213,7 +223,7 @@ namespace CPPLearn{
       fprintf(outfile,"%lu %lu\n", numberOfData, numberOfFeatures);
 
       for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex){
-        fprintf(outfile,"%+d ", labels[dataIndex]);
+        fprintf(outfile,"%d ", labelMap[labels[dataIndex]]);
         for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
           if(featIndex<data[dataIndex].size())
             fprintf(outfile,"%20.10e", data[dataIndex][featIndex]);
@@ -284,6 +294,17 @@ namespace CPPLearn{
                "will only use the first (%lu) data.\n", numberOfData);
 
       return std::make_pair(data, labels);
+    }
+
+    double computeStandardDeviation(const VectorXd& dataVec){
+      double mean=dataVec.mean();
+      unsigned numberOfData=dataVec.size();
+      double var=0;
+      for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex)
+        var+=(dataVec(dataIndex)-mean)*(dataVec(dataIndex)-mean);
+
+      var/=numberOfData-1;
+      return sqrt(var);
     }
   }
 }
