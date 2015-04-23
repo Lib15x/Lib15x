@@ -31,6 +31,9 @@ namespace CPPLearn{
         for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
           colMax(featIndex)=data.col(featIndex).maxCoeff();
           colMin(featIndex)=data.col(featIndex).minCoeff();
+          if (colMax(featIndex)==colMin(featIndex))
+            printf("Warning from MinMax scaler: "
+                   "I found the data for feature No.(%lu) are the same.", featIndex);
         }
         scalerFitted=true;
       }
@@ -58,6 +61,9 @@ namespace CPPLearn{
         MatrixXd transformedData(data.rows(), data.cols());
         for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex){
           for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
+            if (colMax(featIndex)==colMin(featIndex))
+              transformedData(dataIndex,featIndex)=0.0;
+            else
             transformedData(dataIndex,featIndex)=
               lowerBound+range/(colMax(featIndex)-colMin(featIndex))
               *(data(dataIndex, featIndex)-colMin(featIndex));

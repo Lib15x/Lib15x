@@ -38,8 +38,14 @@ namespace CPPLearn{
         for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
           double mean=data.col(featIndex).mean();
           colMean(featIndex)=mean;
-          VectorXd meanVec(numberOfData); meanVec.fill(mean);
-          colStd(featIndex)=(data.col(featIndex)-meanVec).norm()/sqrt(numberOfData-1);
+          double var=0;
+          for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex)
+            var+=(data(dataIndex,featIndex)-mean)*(data(dataIndex,featIndex)-mean);
+          if (var==0.0)
+            printf("Warning from MinMax scaler: "
+                   "I found the data for feature No.(%lu) are the same.", featIndex);
+          var/=numberOfData-1;
+          colStd(featIndex)=sqrt(var);
         }
 
         scalerFitted=true;
@@ -67,10 +73,14 @@ namespace CPPLearn{
         MatrixXd transformedData(data.rows(), data.cols());
         for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex){
           for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
-            transformedData(dataIndex,featIndex)=
-              (data(dataIndex, featIndex)-colMean(featIndex))/colStd(featIndex);
+            if (colStd(featIndex)==0.0)
+              transformedData(dataIndex,featIndex)=0.0;
+            else
+              transformedData(dataIndex,featIndex)=
+                (data(dataIndex, featIndex)-colMean(featIndex))/colStd(featIndex);
           }
         }
+
         return transformedData;
       }
 
