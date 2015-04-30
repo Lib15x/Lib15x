@@ -1,36 +1,42 @@
 #include <core/Definitions.hpp>
-#include <models/LinearRidgeRegression.hpp>
+#include <models/LibSVM.hpp>
+#include <kernels/KernelRBF.hpp>
 #include <validation/CrossValidation.hpp>
+#include <models/MulticlassClassifier.hpp>
+#include <preprocessing/MinMaxScaler.hpp>
 
 using namespace CPPLearn;
-using LearningModel=Models::LinearRidgeRegression;
 
-int main(int argc, char* argv[]){
+using Scaler=Preprocessing::MinMaxScaler;
+using Kernel=Kernels::RBF;
+using BinaryModel=Models::LibSVM<Kernel>;
+using MulticlassModel=Models::MulticlassClassifier<BinaryModel>;
+
+int main(int argc, char* argv[])
+{
   ignoreUnusedVariables(argc, argv);
+  string trainfilename="../../data/libsvm/train.2.cl";
 
-  std::default_random_engine generator;
-  std::normal_distribution<double> distribution(0.0,0.1);
-  size_t numberOfData = 200;
-  size_t numberOfFeatures = 10;
-  MatrixXd data=MatrixXd::Random(numberOfData, numberOfFeatures);
-  VectorXd parameters=VectorXd::Random(numberOfFeatures);
+  auto trainPair= Utilities::readCPPLearnDataFile(trainfilename);
+  MatrixXd& trainData=trainPair.first;
+  Labels& trainLabels=trainPair.second;
 
+  Scaler scaler;
+  trainData=scaler.fitTransform(trainData);
 
+  CrossValidation crossValidation{trainData, trainLabels};
 
+  size_t numberOfFeatures=trainData.cols();
+  double gamma=0.5;
 
+  Kernel kernel{gamma};
+  double C = 2.0;
+  BinaryModel binaryModel{kernel, numberOfFeatures,C};
+  size_t numberOfClasses=trainLabels.labelData.maxCoeff()+1;
+  MulticlassModel multiclassModel{numberOfClasses, binaryModel};
 
-  VectorXd labels=data*parameters;
-  for (size_t index=0; index<numberOfData; ++index)
-    labels(index) += distribution(generator);
+  VectorXd losses=crossValidation.computeValidationLosses(&multiclassModel);
+  cout<<1-losses.mean()<<endl;
 
-  double regularizer=0;
-  LearningModel linearRidgeRegression(regularizer);
-  CrossValidation<LearningModel> crossValidation{linearRidgeRegression};
-  try{
-    VectorXd scores= crossValidation.computeValidationScores(data,labels);
-    cout<<scores<<endl;
-  } catch (std::exception& e){
-    cout<<"there is a problem when doing cross validation!"<<endl;
-    throw;
-  }
+  return 0;
 }
