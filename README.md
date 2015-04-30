@@ -7,3 +7,4 @@ neural network
 perceptron
 k means classification
 PCA
+Need g++-4.9 or higher (5.1)
