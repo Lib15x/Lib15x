@@ -36,12 +36,12 @@ int main(int argc, char* argv[])
   trainData=scaler.fitTransform(trainPair.first);
   testData=scaler.transform(testPair.first);
 
-  double gamma=1.0/numberOfFeatures;
+  double gamma=1.0/(double)numberOfFeatures;
   Kernel kernel{gamma};
   double C=1.0;
   BinaryModel binaryModel{kernel, numberOfFeatures,C};
 
-  size_t numberOfClasses=trainLabels.labelData.maxCoeff()+1;
+  size_t numberOfClasses=(size_t)trainLabels.labelData.maxCoeff()+1;
   MulticlassModel multiclassModel{numberOfClasses, binaryModel};
 
   clock_t t;
@@ -60,9 +60,9 @@ int main(int argc, char* argv[])
 
 
   double loss=LossFunction(predictedLabels, testLabels);
-  double accuracy=1-loss/numberOfTestData;
-  printf("accuracy = %f%%, (%u / %lu)\n", accuracy*100,
-         (unsigned)(accuracy*numberOfTestData), numberOfTestData);
+  double accuracy=1-loss/(double)numberOfTestData;
+  printf("accuracy = %f%%, (%lu / %lu)\n", accuracy*100,
+         (size_t)(accuracy*(double)numberOfTestData), numberOfTestData);
 
   return 0;
 }

@@ -81,7 +81,7 @@ namespace CPPLearn
         svmParameter.probability = 0;
 
         libsvm::svm_problem svmProblem;
-        svmProblem.l=numberOfTrainData;
+        svmProblem.l=(int)numberOfTrainData;
         svmProblem.y=new double[numberOfTrainData];
         svmProblem.x=new libsvm::svm_node*[numberOfTrainData];
         libsvm::svm_node* vector_x=
@@ -91,14 +91,14 @@ namespace CPPLearn
           svmProblem.y[dataIndex]=labelData(dataIndex);
           svmProblem.x[dataIndex]=vector_x+(numberOfTrainData+2)*dataIndex;
           svmProblem.x[dataIndex]->index=0;
-          svmProblem.x[dataIndex]->value=dataIndex+1;
+          svmProblem.x[dataIndex]->value=(double)dataIndex+1;
           (svmProblem.x[dataIndex]+numberOfTrainData+1)->index=-1;
           (svmProblem.x[dataIndex]+numberOfTrainData+1)->value=0;
         }
 
         for (size_t indexI=0; indexI<numberOfTrainData; ++indexI)
           for (size_t indexJ=0; indexJ<numberOfTrainData; ++indexJ){
-            svmProblem.x[indexI][indexJ+1].index=indexJ+1;
+            svmProblem.x[indexI][indexJ+1].index=(int)indexJ+1;
             if (indexI <= indexJ){
               Map<const VectorXd> dataI(&trainData(indexI,0),numberOfFeatures);
               Map<const VectorXd> dataJ(&trainData(indexJ,0),numberOfFeatures);
@@ -175,7 +175,7 @@ namespace CPPLearn
         kerVec[0].index=0;
 
         for (auto& sv : supportVectors){
-          kerVec[sv.first].index=sv.first;
+          kerVec[sv.first].index=(int)sv.first;
           kerVec[sv.first].value=kernel(instance, sv.second);
         }
 

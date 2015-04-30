@@ -25,7 +25,7 @@ namespace CPPLearn
                            const VectorXd* xL_, const VectorXd* xU_,
                            const VectorXd* startPoint_)
         : Q{Q_}, c{c_}, G{G_}, gL{gL_}, gU{gU_}, xL{xL_}, xU{xU_},
-        numberOfDimensions(c_->size()), numberOfAffineConstraints(gL->size()),
+        numberOfDimensions((int)c_->size()), numberOfAffineConstraints((int)gL->size()),
         startPoint{startPoint_} {};
 
       /** default destructor */

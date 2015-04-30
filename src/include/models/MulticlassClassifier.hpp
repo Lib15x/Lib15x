@@ -87,7 +87,7 @@ namespace CPPLearn
                            numberOfClasses, numberOfClasses-1,
                            labelIndex, labelData(labelIndex));
           }
-          ++labelsCount[labelData(labelIndex)];
+          ++labelsCount[(size_t)labelData(labelIndex)];
         }
 
         for (size_t classIndex=0; classIndex<numberOfClasses; ++classIndex)
@@ -186,7 +186,7 @@ namespace CPPLearn
                    "for test data NO. (%lu) is not unique. "
                    "I choose to predict label (%lu) since it is smaller in numeric order.\n",
                    testIndex, maxpos-votes.begin());
-          predictedLabels.labelData(testIndex)=maxpos-votes.begin();
+          predictedLabels.labelData(testIndex)=(double)(maxpos-votes.begin());
         }
 
         return predictedLabels;

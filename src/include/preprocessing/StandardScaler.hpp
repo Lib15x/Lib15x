@@ -46,7 +46,7 @@ namespace CPPLearn
           if (var==0.0)
             printf("Warning from MinMax scaler: "
                    "I found the data for feature No.(%lu) are the same.", featIndex);
-          var/=numberOfData-1;
+          var/=(double)numberOfData-1;
           colStd(featIndex)=sqrt(var);
         }
 

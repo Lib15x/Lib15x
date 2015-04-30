@@ -123,7 +123,7 @@ namespace CPPLearn
           learningModel->train(trainDataOfThisFold, trainLabelsOfThisFold);
           Labels predictedLabels = learningModel->predict(testDataOfThisFold);
           losses(currentRoundIndex)=
-            LossFunction(predictedLabels, testLabelsOfThisFold)/numberOfTestsOfThisFold;
+            LossFunction(predictedLabels, testLabelsOfThisFold)/(double)numberOfTestsOfThisFold;
         }
         catch (std::exception& e){
           printf("Error happened in computeValidationScore function: "
@@ -202,7 +202,7 @@ namespace CPPLearn
     }
 
     //const size_t numberOfClasses = *std::max_element(&labelData[0], &labelData[numberOfData-1]);
-    const size_t numberOfClasses=labelData.maxCoeff()+1;
+    const size_t numberOfClasses=(size_t)labelData.maxCoeff()+1;
     vector<size_t> labelsCount(numberOfClasses, 0);
 
     for (size_t labelIndex=0; labelIndex<numberOfData; ++ labelIndex){
@@ -214,7 +214,7 @@ namespace CPPLearn
                        numberOfClasses, numberOfClasses-1,
                        labelIndex, labelData(labelIndex));
       }
-      ++labelsCount[labelData(labelIndex)];
+      ++labelsCount[(size_t)labelData(labelIndex)];
     }
 
     for (auto& labelCount : labelsCount)
@@ -239,7 +239,7 @@ namespace CPPLearn
     vector<vector<vector<size_t> > > eachClassKFolds(numberOfClasses);
     for (size_t classId=0; classId<numberOfClasses; ++classId)
       eachClassKFolds[classId]=KFolds(labelsCount[classId], numberOfFolds,
-                                      shuffle, randomSeed+classId);
+                                      shuffle, randomSeed + (unsigned)classId);
 
 
     vector<vector<size_t> > eachClassIndexMapToFold;

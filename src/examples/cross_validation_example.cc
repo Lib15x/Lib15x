@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
   Kernel kernel{gamma};
   double C = 2.0;
   BinaryModel binaryModel{kernel, numberOfFeatures,C};
-  size_t numberOfClasses=trainLabels.labelData.maxCoeff()+1;
+  size_t numberOfClasses=(size_t)trainLabels.labelData.maxCoeff()+1;
   MulticlassModel multiclassModel{numberOfClasses, binaryModel};
 
   VectorXd losses=crossValidation.computeValidationLosses(&multiclassModel);

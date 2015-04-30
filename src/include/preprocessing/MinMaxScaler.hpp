@@ -27,7 +27,7 @@ namespace CPPLearn
        */
       void fit(const MatrixXd& data)
       {
-        numberOfFeatures = data.cols();
+        numberOfFeatures = (unsigned)data.cols();
         colMax.resize(numberOfFeatures);
         colMin.resize(numberOfFeatures);
         for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
@@ -52,9 +52,9 @@ namespace CPPLearn
                          "Scaler has not been fitted yet!");
         }
 
-        if (data.cols() != numberOfFeatures){
+        if ((size_t)data.cols() != numberOfFeatures){
           throwException("Error happened when transform data using MinMax scaler: "
-                         "expecting number of features from scaler: (%u); "
+                         "expecting number of features from scaler: (%lu); "
                          "privided number of features from data: (%ld).\n",
                          numberOfFeatures, data.cols());
         }
@@ -100,7 +100,7 @@ namespace CPPLearn
       }
 
     private:
-      unsigned numberOfFeatures;
+      size_t numberOfFeatures;
       bool scalerFitted=false;
       VerboseFlag verbose = VerboseFlag::Quiet;
       double lowerBound;

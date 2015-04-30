@@ -324,7 +324,7 @@ namespace CPPLearn
       for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex)
         var+=(dataVec(dataIndex)-mean)*(dataVec(dataIndex)-mean);
 
-      var/=numberOfData-1;
+      var/=double(numberOfData)-1;
       return sqrt(var);
     }
 

@@ -29,7 +29,7 @@ TEST(LibSVM, RBFKernel_test)
   labels.labelData.resize(numberOfData);
   labels.labelData <<1, 1, 1, 1, 1, 0, 0, 0, 0;
 
-  double gamma=1.0/numberOfFeatures;
+  double gamma=1.0/(double)numberOfFeatures;
   Kernel kernel{gamma};
   LearningModel learningModel{kernel, numberOfFeatures, 1e5};
 

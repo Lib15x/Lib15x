@@ -30,7 +30,7 @@ TEST(SupportVectorClassifier, RBFKernel_test)
   size_t numberOfFeatures=data.cols();
   size_t numberOfData=data.rows();
 
-  double gamma=1.0/numberOfFeatures;
+  double gamma=1.0/(double)numberOfFeatures;
   Kernel kernel{gamma};
   LearningModel learningModel{kernel, numberOfFeatures, 1e5};
 

@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
   const size_t numberOfTestData=testData.rows();
 
   size_t numberOfFeatures=trainData.cols();
-  double gamma=1.0/numberOfFeatures;
+  double gamma=1.0/(double)numberOfFeatures;
 
   Kernel kernel{gamma};
   LearningModel learningModel{kernel, numberOfFeatures};
@@ -46,8 +46,8 @@ int main(int argc, char* argv[])
   t=clock()-t;
   printf ("It took me %ld clicks (%f seconds) for predicting.\n",t,((float)t)/CLOCKS_PER_SEC);
 
-  double accuracy=1.0-LossFunction(predictedLabels, testLabels)/numberOfTestData;
+  double accuracy=1.0-LossFunction(predictedLabels, testLabels)/(double)numberOfTestData;
   printf("accuracy = %f%%, (%u / %lu)\n", accuracy*100,
-         (unsigned)(accuracy*numberOfTestData), numberOfTestData);
+         (unsigned)(accuracy*(double)numberOfTestData), numberOfTestData);
   return 0;
 }
