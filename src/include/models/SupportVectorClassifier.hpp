@@ -4,15 +4,22 @@
 #include <core/Definitions.hpp>
 #include <algorithms/QuadraticProgramming.hpp>
 
-namespace CPPLearn{
-  namespace Models{
-
+namespace CPPLearn
+{
+  namespace Models
+  {
     /**
      * A Support Vector Classifier based on libsvm implementation.
      */
     template<class Kernel>
-    class SupportVectorClassifier{
+    class SupportVectorClassifier
+    {
     public:
+      static const ProblemType ModelType = ProblemType::Classification;
+      static constexpr const char* ModelName="SupportVectorClassifier";
+      static constexpr double (*LossFunction)(const Labels&, const Labels&)=
+        &Utilities::classificationZeroOneLossFunction;
+
       /**
        * Creates the model, with empty model initialized.
        *
@@ -34,36 +41,47 @@ namespace CPPLearn{
        * same as number of features.
        * @param trainLabels contains the labels used for training.
        */
-      void train(const MatrixXd& trainData, const VectorXd& trainLabels) {
-        if (trainData.cols() != numberOfFeatures){
+      void train(const MatrixXd& trainData, const Labels& trainLabels)
+      {
+        if (trainLabels.labelType != ProblemType::Classification){
+          throwException("Error happen when training LibSVM model: "
+                         "Input labelType must be Classification!\n");
+        }
+        const VectorXd& labelData=trainLabels.labelData;
+
+        if ((unsigned)trainData.cols() != numberOfFeatures){
           throwException("Error happen when training model, invalid inpute data: "
                          "expecting number of features from model: (%lu); "
-                         "privided number of features from data: (%lu).\n",
+                         "privided number of features from data: (%ld).\n",
                          numberOfFeatures, trainData.cols());
         }
 
-        if (trainData.rows() != trainLabels.size()){
+        if (trainData.rows() != labelData.size()){
           throwException("data and label size mismatch! "
-                         "number of data: (%lu), "
-                         "number of labels: (%lu), ",
-                         trainData.rows(), trainLabels.size());
+                         "number of data: (%ld), "
+                         "number of labels: (%ld), ",
+                         trainData.rows(), labelData.size());
         }
 
         const size_t numberOfTrainData = trainData.rows();
         VectorXd localLabels(numberOfTrainData);
         for (size_t labelIndex=0; labelIndex<numberOfTrainData; ++ labelIndex){
-          if (trainLabels(labelIndex) != 0 && trainLabels(labelIndex) != 1){
+          if (labelData(labelIndex) != 0 && labelData(labelIndex) != 1){
             throwException("In SV classifier: the provided labels should only contain 0 and 1!");
           }
-          localLabels[labelIndex]= trainLabels[labelIndex] == 0 ? -1: 1;
+          localLabels[labelIndex]= labelData[labelIndex] == 0 ? -1: 1;
         }
 
         MatrixXd hessian(numberOfTrainData, numberOfTrainData);
 
-        for (size_t rowIndex=0; rowIndex<numberOfTrainData; ++rowIndex)
-          for (size_t colIndex=0; colIndex<numberOfTrainData; ++colIndex)
+        for (size_t rowIndex=0; rowIndex<numberOfTrainData; ++rowIndex){
+          Map<const VectorXd> dataI(&trainData(rowIndex,0), numberOfFeatures);
+          for (size_t colIndex=0; colIndex<numberOfTrainData; ++colIndex){
+            Map<const VectorXd> dataJ(&trainData(colIndex,0), numberOfFeatures);
             hessian(rowIndex, colIndex)= localLabels(rowIndex)*localLabels(colIndex)*
-              kernel(trainData.row(rowIndex), trainData.row(colIndex));
+              kernel(dataI, dataJ);
+          }
+        }
 
         VectorXd c(numberOfTrainData); c.fill(-1);
         VectorXd gL(1); gL.fill(0);
@@ -102,26 +120,28 @@ namespace CPPLearn{
        * @param testData predictors, the number of columns should be the
        * same as number of features.
        */
-      VectorXd predict(const MatrixXd& testData) const {
+      Labels predict(const MatrixXd& testData) const
+      {
         if (!modelTrained){
           throwException("model has not been trained yet!");
         }
 
-        if (testData.cols() != numberOfFeatures){
+        if ((unsigned)testData.cols() != numberOfFeatures){
           throwException("Error happen when predicting, invalid inpute data: "
                          "expecting number of features from model: (%lu); "
-                         "privided number of features from data: (%lu).\n",
+                         "privided number of features from data: (%ld).\n",
                          numberOfFeatures, testData.cols());
         }
 
         size_t numberOfTests=testData.rows();
-        VectorXd predictedLabels(numberOfTests);
+        Labels predictedLabels(ProblemType::Classification);
+        predictedLabels.labelData.resize(numberOfTests);
 
         for (size_t testId=0; testId<numberOfTests; ++testId){
           double predictedLabel=b;
           for (auto svIt=supportVectors.begin(); svIt!=supportVectors.end(); ++svIt)
             predictedLabel+=svIt->first * kernel(testData.row(testId), svIt->second);
-          predictedLabels(testId)=predictedLabel>0;
+          predictedLabels.labelData(testId)=predictedLabel>0;
         }
 
         return predictedLabels;
@@ -130,7 +150,8 @@ namespace CPPLearn{
       /**
        * Each row is a SV.
        */
-      MatrixXd getSupportVectors() const {
+      MatrixXd getSupportVectors() const
+      {
         if (!modelTrained){
           throwException("model has not been trained yet!");
         }
@@ -147,12 +168,14 @@ namespace CPPLearn{
       /**
        * Clear the model.
        */
-      void clear(){
+      void clear()
+      {
         supportVectors.clear();
         modelTrained=false;
       }
 
-      bool& printOptimizationProgress(){
+      bool& printOptimizationProgress()
+      {
         return moreOptInfo;
       }
 

@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
 
-PROJECT(CPPLearn)
+SET(CMAKE_C_COMPILER /usr/bin/gcc-4.9)
+SET(CMAKE_CXX_COMPILER /usr/bin/g++-4.9)
 
+PROJECT(CPPLearn)
 list (APPEND CMAKE_MODULE_PATH "${CPPLearn_SOURCE_DIR}/../cmake")
 
 #include eigen

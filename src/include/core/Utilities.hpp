@@ -6,12 +6,15 @@
 #include <Eigen/Eigenvalues>
 #include <sys/stat.h>
 
-namespace CPPLearn{
-  namespace Utilities {
+namespace CPPLearn
+{
+  namespace Utilities
+  {
     enum class TrimStyle {DontTrim, Trim};
 
     // retrieved from http://oxaric.wordpress.com/2008/11/23/3-simple-c-functions/
-    std::string trim( std::string line ) {
+    std::string trim( std::string line )
+    {
       if ( line.empty() ) {
         return "";
       }
@@ -54,7 +57,8 @@ namespace CPPLearn{
     }
 
     std::vector<std::string> tokenize(const std::string& str, const std::string& delimiters,
-                                      const TrimStyle doTrim) {
+                                      const TrimStyle doTrim)
+    {
       // Skip delimiters at beginning.
       std::vector<std::string> tokens;
       std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
@@ -77,7 +81,8 @@ namespace CPPLearn{
 
     template <class T>
     T
-    convertString(const string & str) {
+    convertString(const string & str)
+    {
       std::stringstream ss;
       ss << str;
       T returnVal;
@@ -102,7 +107,8 @@ namespace CPPLearn{
 
     template <>
     double
-    convertString<double>(const string & str) {
+    convertString<double>(const string & str)
+    {
       if (strcmp(str.c_str(), "nan") == 0) {
         //printf("Parsed a nan\n");
         return std::numeric_limits<double>::quiet_NaN();
@@ -118,8 +124,8 @@ namespace CPPLearn{
     void
     directoryCreator(const string & fullPath,
                      const bool createNewDirectory = true,
-                     const VerboseFlag verboseFlag = VerboseFlag::Verbose){
-
+                     const VerboseFlag verboseFlag = VerboseFlag::Verbose)
+    {
       // split the fullPath by slashes
       vector<string> tokens = Utilities::tokenize(fullPath, "/",
                                                   Utilities::TrimStyle::Trim);
@@ -159,7 +165,8 @@ namespace CPPLearn{
 
     void createCPPLearnDataFileFromLibsvmFormat(const string& libsvmFormatFileName,
                                                 const string& cpplearnFileName,
-                                                const VerboseFlag verboseFlag=VerboseFlag::Quiet){
+                                                const VerboseFlag verboseFlag=VerboseFlag::Quiet)
+    {
       ifstream inputFile;
       inputFile.open(libsvmFormatFileName);
 
@@ -202,10 +209,10 @@ namespace CPPLearn{
         data.push_back(std::move(instance));
       }
 
-      unsigned labelCount=0;
-      std::map<int, unsigned> labelMap;
+      size_t labelCount=0;
+      std::map<int, size_t> labelMap;
       for (auto& label : labelTypes){
-        labelMap.insert(std::pair<int, unsigned>(label, labelCount));
+        labelMap.insert(std::pair<int, size_t>(label, labelCount));
         ++labelCount;
       }
       assert(labelCount==labelTypes.size());
@@ -220,10 +227,10 @@ namespace CPPLearn{
       if (verboseFlag==VerboseFlag::Verbose)
         cout<<"Finsh reading data, begin write data to file: "<<cpplearnFileName<<endl;
 
-      fprintf(outfile,"%lu %lu\n", numberOfData, numberOfFeatures);
+      fprintf(outfile,"%lu %lu %s\n", numberOfData, numberOfFeatures, "Classification");
 
       for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex){
-        fprintf(outfile,"%d ", labelMap[labels[dataIndex]]);
+        fprintf(outfile,"%lu ", labelMap[labels[dataIndex]]);
         for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
           if(featIndex<data[dataIndex].size())
             fprintf(outfile,"%20.10e", data[dataIndex][featIndex]);
@@ -244,8 +251,9 @@ namespace CPPLearn{
       }
     }
 
-    std::pair<MatrixXd, VectorXd>
-    readCPPLearnDataFile(const string& filename){
+    std::pair<MatrixXd, Labels>
+    readCPPLearnDataFile(const string& filename)
+    {
       ifstream file;
       file.open(filename);
       if (!file.is_open()){
@@ -256,18 +264,30 @@ namespace CPPLearn{
       getline(file, line);
       vector<string> tokens = tokenize(line, " ", TrimStyle::Trim);
 
-      if (tokens.size() != 2){
+      if (tokens.size() != 3){
         throwException("File %s is in the wrong format. "
-                       "First line needs to specify the number of data "
-                       "and number of features, seperated by space!",
+                       "First line needs to specify the number of data, "
+                       "number of features, and type of problem seperated by space!",
                        filename.c_str());
       }
 
       size_t numberOfData = atoi(tokens[0].c_str());
       size_t numberOfFeatures = atoi(tokens[1].c_str());
 
-      MatrixXd data(numberOfData, numberOfFeatures);
-      VectorXd labels(numberOfData);
+
+      if (tokens[2].compare("Classification") !=0 && tokens[2].compare("Regression") !=0){
+        throwException("Error happened when reading file %s:\n"
+                       "the input problem type mush be either Classification or Regression!\n",
+                       filename.c_str());
+      }
+
+      ProblemType problemType = (tokens[2].compare("Classification")==0) ?
+        ProblemType::Classification : ProblemType::Regression;
+
+      MatrixXd data{numberOfData, numberOfFeatures};
+      Labels labels{problemType};
+      VectorXd& labelData=labels.labelData;
+      labelData.resize(numberOfData);
 
       for (size_t lineIndex=1; lineIndex<=numberOfData; ++lineIndex){
         getline(file, line);
@@ -284,7 +304,7 @@ namespace CPPLearn{
                          lineIndex, numberOfFeatures+1, tokens.size());
         }
 
-        labels(lineIndex-1)=atof(tokens[0].c_str());
+        labelData(lineIndex-1)=atof(tokens[0].c_str());
         for (size_t tokIndex=1; tokIndex<=numberOfFeatures; ++tokIndex)
           data(lineIndex-1, tokIndex-1) = atof(tokens[tokIndex].c_str());
       }
@@ -296,15 +316,69 @@ namespace CPPLearn{
       return std::make_pair(data, labels);
     }
 
-    double computeStandardDeviation(const VectorXd& dataVec){
+    double computeStandardDeviation(const VectorXd& dataVec)
+    {
       double mean=dataVec.mean();
-      unsigned numberOfData=dataVec.size();
+      size_t numberOfData=dataVec.size();
       double var=0;
       for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex)
         var+=(dataVec(dataIndex)-mean)*(dataVec(dataIndex)-mean);
 
       var/=numberOfData-1;
       return sqrt(var);
+    }
+
+    double classificationZeroOneLossFunction(const Labels& predictedLabels,
+                                             const Labels& testLabels)
+    {
+      if (predictedLabels.labelType != ProblemType::Classification ||
+          testLabels.labelType != ProblemType::Classification) {
+        throwException("Error happen when computing classsification error: "
+                       "Input labelType must be Classification!\n");
+      }
+
+      const VectorXd& predictedLabelData=predictedLabels.labelData;
+      const VectorXd& testLabelData=testLabels.labelData;
+
+      if (predictedLabelData.size() != testLabelData.size()){
+        throwException("Error happen when computing classsification error: "
+                       "The inpute two labels have different sizes. "
+                       "sizes of the predicted labels: (%ld); "
+                       "sizes of the test labels: (%ld).\n",
+                       predictedLabelData.size(), testLabelData.size());
+      }
+
+      size_t numberOfData=predictedLabelData.size();
+
+      double loss=0;
+      for (size_t dataId=0; dataId<numberOfData; ++dataId)
+        loss+=(double)(predictedLabelData(dataId)!=testLabelData(dataId));
+
+      return loss;
+    }
+
+    double regressionSquaredNormLossFunction(const Labels& predictedLabels,
+                                             const Labels& testLabels)
+    {
+      if (predictedLabels.labelType != ProblemType::Regression ||
+          testLabels.labelType != ProblemType::Regression){
+        throwException("Error happen when computing regression loss: "
+                       "Input labelType must be Regression!\n");
+      }
+
+      const VectorXd& predictedLabelData=predictedLabels.labelData;
+      const VectorXd& testLabelData=testLabels.labelData;
+
+      if (predictedLabelData.size() != testLabelData.size()){
+        throwException("Error happen when computing regression loss: "
+                       "The inpute two labels have different sizes. "
+                       "sizes of the predicted labels: (%ld); "
+                       "sizes of the test labels: (%ld).\n",
+                       predictedLabelData.size(), testLabelData.size());
+      }
+
+      double loss=(predictedLabelData-testLabelData).squaredNorm();
+      return loss;
     }
   }
 }

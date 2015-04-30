@@ -7,7 +7,8 @@
 
 using namespace CPPLearn;
 
-TEST(SupportVectorClassifier, RBFKernel_test) {
+TEST(SupportVectorClassifier, RBFKernel_test)
+{
   using Kernel=Kernels::RBF;
   using LearningModel=Models::SupportVectorClassifier<Kernel>;
 
@@ -22,8 +23,9 @@ TEST(SupportVectorClassifier, RBFKernel_test) {
     4, 3,
     5, 5;
 
-  VectorXd labels(9);
-  labels<<1, 1, 1, 1, 1, 0, 0, 0, 0;
+  Labels labels{ProblemType::Classification};
+  labels.labelData.resize(9);
+  labels.labelData<<1, 1, 1, 1, 1, 0, 0, 0, 0;
 
   size_t numberOfFeatures=data.cols();
   size_t numberOfData=data.rows();
@@ -33,13 +35,14 @@ TEST(SupportVectorClassifier, RBFKernel_test) {
   LearningModel learningModel{kernel, numberOfFeatures, 1e5};
 
   learningModel.train(data, labels);
-  VectorXd predictedLabels=learningModel.predict(data);
+  Labels predictedLabels=learningModel.predict(data);
 
   for (size_t testIndex=0; testIndex<numberOfData; ++testIndex)
-    EXPECT_EQ(labels[testIndex], predictedLabels(testIndex));
+    EXPECT_EQ(labels.labelData[testIndex], predictedLabels.labelData(testIndex));
 }
 
-TEST(SupportVectorClassifier, DotKernel_test) {
+TEST(SupportVectorClassifier, DotKernel_test)
+{
   using Kernel=Kernels::Dot;
   using LearningModel=Models::SupportVectorClassifier<Kernel>;
 
@@ -54,8 +57,9 @@ TEST(SupportVectorClassifier, DotKernel_test) {
     4, 3,
     5, 5;
 
-  VectorXd labels(9);
-  labels<<1, 1, 1, 1, 1, 0, 0, 0, 0;
+  Labels labels{ProblemType::Classification};
+  labels.labelData.resize(9);
+  labels.labelData<<1, 1, 1, 1, 1, 0, 0, 0, 0;
 
   size_t numberOfFeatures=data.cols();
   size_t numberOfData=data.rows();
@@ -65,8 +69,8 @@ TEST(SupportVectorClassifier, DotKernel_test) {
   LearningModel learningModel{kernel, numberOfFeatures, C};
 
   learningModel.train(data, labels);
-  VectorXd predictedLabels=learningModel.predict(data);
+  Labels predictedLabels=learningModel.predict(data);
 
   for (size_t testIndex=0; testIndex<numberOfData; ++testIndex)
-    EXPECT_EQ(labels[testIndex], predictedLabels(testIndex));
+    EXPECT_EQ(labels.labelData[testIndex], predictedLabels.labelData(testIndex));
 }

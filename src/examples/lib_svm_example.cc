@@ -8,15 +8,19 @@ using namespace CPPLearn;
 using Kernel=Kernels::RBF;
 using LearningModel=Models::LibSVM<Kernel>;
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[])
+{
   ignoreUnusedVariables(argc, argv);
+  constexpr double (*LossFunction)(const Labels&, const Labels&)=LearningModel::LossFunction;
 
   string trainfilename="../../data/test/libsvm_train_1.cl";
 
-  std::pair<MatrixXd, VectorXd> trainPair=
-    Utilities::readCPPLearnDataFile(trainfilename);
+  auto trainPair= Utilities::readCPPLearnDataFile(trainfilename);
+  const MatrixXd& trainData=trainPair.first;
+  const Labels& trainLabels=trainPair.second;
 
-  size_t numberOfFeatures=trainPair.first.cols();
+  size_t numberOfData=trainData.rows();
+  size_t numberOfFeatures=trainData.cols();
   double gamma=1.0/numberOfFeatures;
 
   Kernel kernel{gamma};
@@ -24,23 +28,19 @@ int main(int argc, char* argv[]){
 
   clock_t t;
   t=clock();
-  learningModel.train(trainPair.first, trainPair.second);
+  learningModel.train(trainData, trainLabels);
   t=clock()-t;
   printf ("It took me %ld clicks (%f seconds) for training.\n",t,((float)t)/CLOCKS_PER_SEC);
   cout<<"number of support vectors: "<<learningModel.getSupportVectors().rows()<<endl;
 
   t=clock();
-  VectorXd predictedLabels=learningModel.predict(trainPair.first);
+  Labels predictedLabels=learningModel.predict(trainPair.first);
   t=clock()-t;
   printf ("It took me %ld clicks (%f seconds) for predicting.\n",t,((float)t)/CLOCKS_PER_SEC);
 
-  unsigned numberOfMatches=0;
-  for (unsigned index=0; index<trainPair.second.size(); ++index){
-    numberOfMatches+=(predictedLabels[index]==trainPair.second[index]);
-  }
-
-  double accuracy=double(numberOfMatches)/trainPair.second.size()*100;
-  printf("accuracy = %f%%, (%u / %lu)\n", accuracy, numberOfMatches, trainPair.second.size());
+  double accuracy=1.0-LossFunction(predictedLabels, trainPair.second)/numberOfData;
+  printf("accuracy = %f%%, (%u / %lu)\n", accuracy*100,
+         (unsigned)(accuracy*numberOfData), numberOfData);
 
   return 0;
 }

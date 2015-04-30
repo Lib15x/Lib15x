@@ -5,16 +5,19 @@
 #include <IpTNLP.hpp>
 #include <IpIpoptApplication.hpp>
 
-namespace CPPLearn{
-  namespace Algorithms{
-
-    struct OptSolution{
+namespace CPPLearn
+{
+  namespace Algorithms
+  {
+    struct OptSolution
+    {
       double objOptimal=0;
       VectorXd minimizer;
       bool solverSucess=false;
     };
 
-    class QuadraticProgramming : public Ipopt::TNLP {
+    class QuadraticProgramming : public Ipopt::TNLP
+    {
     public:
       /** constructor */
       QuadraticProgramming(const MatrixXd* Q_, const VectorXd* c_,
@@ -32,7 +35,8 @@ namespace CPPLearn{
       //@{
       /** Method to return some info about the nlp */
       virtual bool get_nlp_info(Ipopt::Index& n, Ipopt::Index& m, Ipopt::Index& nnz_jac_g,
-                                Ipopt::Index& nnz_h_lag, IndexStyleEnum& index_style){
+                                Ipopt::Index& nnz_h_lag, IndexStyleEnum& index_style)
+      {
         n = numberOfDimensions;
         m = numberOfAffineConstraints;
         nnz_jac_g = n*m;
@@ -44,7 +48,8 @@ namespace CPPLearn{
 
       /** Method to return the bounds for my problem */
       virtual bool get_bounds_info(Ipopt::Index n, Ipopt::Number* x_l, Ipopt::Number* x_u,
-                                   Ipopt::Index m, Ipopt::Number* g_l, Ipopt::Number* g_u){
+                                   Ipopt::Index m, Ipopt::Number* g_l, Ipopt::Number* g_u)
+      {
         assert(n == numberOfDimensions);
         assert(m == numberOfAffineConstraints);
 
@@ -65,7 +70,8 @@ namespace CPPLearn{
       virtual bool get_starting_point(Ipopt::Index n, bool init_x, Ipopt::Number* x,
                                       bool init_z, Ipopt::Number* z_L, Ipopt::Number* z_U,
                                       Ipopt::Index m, bool init_lambda,
-                                      Ipopt::Number* lambda){
+                                      Ipopt::Number* lambda)
+      {
         assert(init_x == true);
         assert(init_z == false);
         assert(init_lambda == false);
@@ -80,7 +86,8 @@ namespace CPPLearn{
 
       /** Method to return the objective value */
       virtual bool eval_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
-                          Ipopt::Number& obj_value){
+                          Ipopt::Number& obj_value)
+      {
         assert(n == numberOfDimensions);
         Map<const VectorXd> x_map(x,n);
         obj_value = 0.5*x_map.dot((*Q)*x_map)+c->dot(x_map);
@@ -90,7 +97,8 @@ namespace CPPLearn{
 
       /** Method to return the gradient of the objective */
       virtual bool eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
-                               Ipopt::Number* grad_f){
+                               Ipopt::Number* grad_f)
+      {
         assert(n == numberOfDimensions);
         Map<const VectorXd> x_map(x,n);
         Map<VectorXd> grad_f_map(grad_f,n);
@@ -101,7 +109,8 @@ namespace CPPLearn{
 
       /** Method to return the constraint residuals */
       virtual bool eval_g(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
-                          Ipopt::Index m, Ipopt::Number* g){
+                          Ipopt::Index m, Ipopt::Number* g)
+      {
         assert(n == numberOfDimensions);
         assert(m == numberOfAffineConstraints);
 
@@ -118,7 +127,8 @@ namespace CPPLearn{
        */
       virtual bool eval_jac_g(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
                               Ipopt::Index m, Ipopt::Index nele_jac, Ipopt::Index* iRow,
-                              Ipopt::Index *jCol, Ipopt::Number* values){
+                              Ipopt::Index *jCol, Ipopt::Number* values)
+      {
         assert(n == numberOfDimensions);
         assert(m == numberOfAffineConstraints);
         if (values == NULL) {
@@ -144,7 +154,8 @@ namespace CPPLearn{
       virtual bool eval_h(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
                           Ipopt::Number obj_factor, Ipopt::Index m, const Ipopt::Number* lambda,
                           bool new_lambda, Ipopt::Index nele_hess, Ipopt::Index* iRow,
-                          Ipopt::Index* jCol, Ipopt::Number* values){
+                          Ipopt::Index* jCol, Ipopt::Number* values)
+      {
         assert(n == numberOfDimensions);
         assert(m == numberOfAffineConstraints);
         if (values == NULL) {
@@ -182,8 +193,8 @@ namespace CPPLearn{
                                      const Ipopt::Number* lambda,
                                      Ipopt::Number obj_value,
                                      const Ipopt::IpoptData* ip_data,
-                                     Ipopt::IpoptCalculatedQuantities* ip_cq){
-
+                                     Ipopt::IpoptCalculatedQuantities* ip_cq)
+      {
         assert(n == numberOfDimensions);
         assert(m == numberOfAffineConstraints);
         solvedFlag=true;
@@ -197,7 +208,8 @@ namespace CPPLearn{
 
       }
 
-      const OptSolution& getOptimalSolution() const{
+      const OptSolution& getOptimalSolution() const
+      {
         if (!solvedFlag){
           throwException("Problem has not been solved yet! Please solve the problem first!");
         }
@@ -228,8 +240,8 @@ namespace CPPLearn{
                                           const MatrixXd& G, const VectorXd& gL, const VectorXd& gU,
                                           const VectorXd& xL, const VectorXd& xU,
                                           const VectorXd& startPoint, double tol,
-                                          const bool ipoptVerboseFlag=false){
-
+                                          const bool ipoptVerboseFlag=false)
+    {
       if (Q.cols() !=Q.rows()){
         throwException("Input matrix Q is not squares! "
                        "Number of rows: %ld; Number of cols: %ld.\n",
@@ -308,8 +320,8 @@ namespace CPPLearn{
                                          const VectorXd& gL, const VectorXd& gU,
                                          const VectorXd& xL, const VectorXd& xU,
                                          const double tol,
-                                         const bool ipoptVerboseFlag=false){
-
+                                         const bool ipoptVerboseFlag=false)
+    {
       VectorXd startPoint=VectorXd::Random(c.size());
       return SolveQudraticProgramming(Q, c, G, gL, gU, xL, xU, startPoint, tol, ipoptVerboseFlag);
     }
@@ -319,7 +331,8 @@ namespace CPPLearn{
                                           const VectorXd& gU,
                                           const VectorXd& xL, const VectorXd& xU,
                                           const VectorXd& startPoint,
-                                          const bool ipoptVerboseFlag=false){
+                                          const bool ipoptVerboseFlag=false)
+    {
       double tol=1e-7;
       return SolveQudraticProgramming(Q, c, G, gL, gU, xL, xU, startPoint,tol, ipoptVerboseFlag);
     }
@@ -328,7 +341,8 @@ namespace CPPLearn{
                                           const MatrixXd& G,
                                           const VectorXd& gL, const VectorXd& gU,
                                           const VectorXd& xL, const VectorXd& xU,
-                                          const bool ipoptVerboseFlag=false){
+                                          const bool ipoptVerboseFlag=false)
+    {
       double tol=1e-7;
       VectorXd startPoint=VectorXd::Zero(c.size());
 

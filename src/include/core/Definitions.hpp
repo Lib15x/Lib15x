@@ -18,17 +18,10 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/Sparse>
 
-//make_unique function from effective morden c++ by Scott Meyers
-namespace std{
-  template<typename T, typename... Ts>
-  unique_ptr<T> make_unique(Ts&&... params)
-  {
-    return std::unique_ptr<T>(new T(std::forward<Ts>(params)...));
-  }
-}
-
-namespace CPPLearn{
+namespace CPPLearn
+{
   enum class VerboseFlag {Quiet, Verbose};
+  enum class ProblemType {Classification, Regression};
   using std::array;
   using std::vector;
   using std::string;
@@ -36,10 +29,6 @@ namespace CPPLearn{
   using std::cout;
   using std::endl;
   using std::size_t;
-  using std::shared_ptr;
-  using std::unique_ptr;
-  using std::make_shared;
-  using std::make_unique;
 
   using Eigen::Matrix;
   using MatrixXd=Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
@@ -48,24 +37,34 @@ namespace CPPLearn{
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
   template <typename Variable>
-  void ignoreUnusedVariable(Variable dummy) {
-  }
+  void ignoreUnusedVariable(Variable dummy) {}
   template <typename T>
-  void ignoreUnusedVariables(const T & t) {
-  }
+  void ignoreUnusedVariables(const T & t) {}
   template <typename T, typename U>
-  void ignoreUnusedVariables(const T & t, const U & u) {
-  }
+  void ignoreUnusedVariables(const T & t, const U & u) {}
   template <typename T, typename U, typename V>
-  void ignoreUnusedVariables(const T & t, const U & u, const V & v) {
-  }
+  void ignoreUnusedVariables(const T & t, const U & u, const V & v) {}
   template <typename T, typename U, typename V, typename W>
-  void ignoreUnusedVariables(const T & t, const U & u, const V & v, const W & w) {
-  }
+  void ignoreUnusedVariables(const T & t, const U & u, const V & v, const W & w) {}
 
   char exceptionBuffer[10000];
 #define throwException(s, ...)                  \
   sprintf(exceptionBuffer, s, ##__VA_ARGS__);   \
   throw std::runtime_error(exceptionBuffer);
+
+  struct Labels
+  {
+    const ProblemType labelType;
+    VectorXd labelData;
+
+    Labels(const ProblemType labelType_) : labelType{labelType_}
+    {
+      if (labelType!=ProblemType::Classification && labelType!=ProblemType::Regression){
+        throwException("Error happened in label constructor: "
+                       "Type of label mush be either Classification or Regression");
+      }
+    }
+  };
 }
+
 #endif // DEFINITIONS_H

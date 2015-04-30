@@ -3,15 +3,16 @@
 
 #include <core/Definitions.hpp>
 
-namespace CPPLearn{
-  namespace Preprocessing{
-
+namespace CPPLearn
+{
+  namespace Preprocessing
+  {
     /**
      * enter a brief description
      */
-    class MinMaxScaler{
+    class MinMaxScaler
+    {
     public:
-
       /**
        * add brief description
        *
@@ -24,7 +25,8 @@ namespace CPPLearn{
        *
        * @param data describe parameter
        */
-      void fit(const MatrixXd& data) {
+      void fit(const MatrixXd& data)
+      {
         numberOfFeatures = data.cols();
         colMax.resize(numberOfFeatures);
         colMin.resize(numberOfFeatures);
@@ -43,7 +45,8 @@ namespace CPPLearn{
        *
        * @param data describe parameter
        */
-      MatrixXd transform(const MatrixXd& data) const {
+      MatrixXd transform(const MatrixXd& data) const
+      {
         if (!scalerFitted){
           throwException("Error happened when transform data using MinMax scaler: "
                          "Scaler has not been fitted yet!");
@@ -57,16 +60,16 @@ namespace CPPLearn{
         }
 
         double range=upperBound-lowerBound;
-        unsigned numberOfData=data.rows();
+        size_t numberOfData=data.rows();
         MatrixXd transformedData(data.rows(), data.cols());
         for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex){
           for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
             if (colMax(featIndex)==colMin(featIndex))
-              transformedData(dataIndex,featIndex)=0.0;
+              transformedData(dataIndex,featIndex)=data(dataIndex,featIndex);
             else
-            transformedData(dataIndex,featIndex)=
-              lowerBound+range/(colMax(featIndex)-colMin(featIndex))
-              *(data(dataIndex, featIndex)-colMin(featIndex));
+              transformedData(dataIndex,featIndex)=
+                lowerBound+range/(colMax(featIndex)-colMin(featIndex))
+                *(data(dataIndex, featIndex)-colMin(featIndex));
           }
         }
         return transformedData;
@@ -77,7 +80,8 @@ namespace CPPLearn{
        *
        * @param data describe parameter
        */
-      MatrixXd fitTransform(const MatrixXd& data) {
+      MatrixXd fitTransform(const MatrixXd& data)
+      {
         fit(data);
         return transform(data);
       }
@@ -85,7 +89,8 @@ namespace CPPLearn{
       /**
        * Clear the model.
        */
-      void clear(){
+      void clear()
+      {
         numberOfFeatures=0;
         scalerFitted=false;
       }

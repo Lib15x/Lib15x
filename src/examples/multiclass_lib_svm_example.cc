@@ -13,29 +13,35 @@ using Kernel=Kernels::RBF;
 using BinaryModel=Models::LibSVM<Kernel>;
 using MulticlassModel=Models::MulticlassClassifier<BinaryModel>;
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[])
+{
   ignoreUnusedVariables(argc, argv);
+  constexpr double (*LossFunction)(const Labels&, const Labels&)=MulticlassModel::LossFunction;
 
   string trainfilename="../../data/libsvm/glass.scale.cl";
   string testfilename="../../data/libsvm/glass.scale.cl";
 
-  std::pair<MatrixXd, VectorXd> trainPair=
-    Utilities::readCPPLearnDataFile(trainfilename);
+  auto trainPair= Utilities::readCPPLearnDataFile(trainfilename);
+  auto testPair= Utilities::readCPPLearnDataFile(testfilename);
 
-  std::pair<MatrixXd, VectorXd> testPair=
-    Utilities::readCPPLearnDataFile(testfilename);
+  MatrixXd& trainData=trainPair.first;
+  Labels& trainLabels=trainPair.second;
+  MatrixXd& testData=testPair.first;
+  Labels& testLabels=testPair.second;
 
-  size_t numberOfFeatures=trainPair.first.cols();
+  size_t numberOfTestData=testData.rows();
+
+  size_t numberOfFeatures=trainData.cols();
   Scaler scaler;
-  MatrixXd trainData=scaler.fitTransform(trainPair.first);
-  MatrixXd testData=scaler.transform(testPair.first);
+  trainData=scaler.fitTransform(trainPair.first);
+  testData=scaler.transform(testPair.first);
 
   double gamma=1.0/numberOfFeatures;
   Kernel kernel{gamma};
   double C=1.0;
   BinaryModel binaryModel{kernel, numberOfFeatures,C};
 
-  unsigned numberOfClasses=trainPair.second.maxCoeff()+1;
+  size_t numberOfClasses=trainLabels.labelData.maxCoeff()+1;
   MulticlassModel multiclassModel{numberOfClasses, binaryModel};
 
   clock_t t;
@@ -43,22 +49,20 @@ int main(int argc, char* argv[]){
 
   multiclassModel.whetherVerbose() = VerboseFlag::Verbose;
 
-  multiclassModel.train(trainData, trainPair.second);
+  multiclassModel.train(trainData, trainLabels);
   t=clock()-t;
   printf ("It took me %ld clicks (%f seconds) for training.\n",t,((float)t)/CLOCKS_PER_SEC);
 
   t=clock();
-  VectorXd predictedLabels=multiclassModel.predict(testData);
+  Labels predictedLabels=multiclassModel.predict(testData);
   t=clock()-t;
   printf ("It took me %ld clicks (%f seconds) for predicting.\n",t,((float)t)/CLOCKS_PER_SEC);
 
-  unsigned numberOfMatches=0;
-  for (unsigned index=0; index<testPair.second.size(); ++index){
-    numberOfMatches+=(predictedLabels[index]==testPair.second[index]);
-  }
 
-  double accuracy=double(numberOfMatches)/testPair.second.size()*100;
-  printf("accuracy = %f%%, (%u / %lu)\n", accuracy, numberOfMatches, testPair.second.size());
+  double loss=LossFunction(predictedLabels, testLabels);
+  double accuracy=1-loss/numberOfTestData;
+  printf("accuracy = %f%%, (%u / %lu)\n", accuracy*100,
+         (unsigned)(accuracy*numberOfTestData), numberOfTestData);
 
   return 0;
 }

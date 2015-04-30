@@ -6,7 +6,8 @@
 
 using namespace CPPLearn;
 
-TEST(Scaler, Standard_test) {
+TEST(Scaler, Standard_test)
+{
   using Scaler=Preprocessing::StandardScaler;
 
   unsigned numberOfFeatures=10;

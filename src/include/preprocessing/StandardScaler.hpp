@@ -3,15 +3,16 @@
 
 #include <core/Definitions.hpp>
 
-namespace CPPLearn{
-  namespace Preprocessing{
-
+namespace CPPLearn
+{
+  namespace Preprocessing
+  {
     /**
      * enter a brief description
      */
-    class StandardScaler{
+    class StandardScaler
+    {
     public:
-
       /**
        * Creates the model, with empty model initialized.
        *
@@ -24,12 +25,13 @@ namespace CPPLearn{
        *
        * @param data describe parameter
        */
-      void fit(const MatrixXd& data) {
+      void fit(const MatrixXd& data)
+      {
         numberOfFeatures = data.cols();
-        unsigned numberOfData = data.rows();
+        size_t numberOfData = data.rows();
         if (numberOfData<=1){
           throwException("Error happened in standard scaler: "
-                         "There is only (%u) data provided, which is smaller than 2.\n",
+                         "There is only (%lu) data provided, which is smaller than 2.\n",
                          numberOfData);
         }
 
@@ -56,20 +58,21 @@ namespace CPPLearn{
        *
        * @param data describe parameter
        */
-      MatrixXd transform(const MatrixXd& data) const {
+      MatrixXd transform(const MatrixXd& data) const
+      {
         if (!scalerFitted){
           throwException("Error happened when transform data using MinMax scaler: "
                          "Scaler has not been fitted yet!");
         }
 
-        if (data.cols() != numberOfFeatures){
+        if ((unsigned)data.cols() != numberOfFeatures){
           throwException("Error happened when transform data using MinMax scaler: "
-                         "expecting number of features from scaler: (%u); "
+                         "expecting number of features from scaler: (%lu); "
                          "privided number of features from data: (%ld).\n",
                          numberOfFeatures, data.cols());
         }
 
-        unsigned numberOfData=data.rows();
+        size_t numberOfData=data.rows();
         MatrixXd transformedData(data.rows(), data.cols());
         for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex){
           for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
@@ -89,7 +92,8 @@ namespace CPPLearn{
        *
        * @param data describe parameter
        */
-      MatrixXd fitTransform(const MatrixXd& data) {
+      MatrixXd fitTransform(const MatrixXd& data)
+      {
         fit(data);
         return transform(data);
       }
@@ -97,17 +101,19 @@ namespace CPPLearn{
       /**
        * Clear the model.
        */
-      void clear(){
+      void clear()
+      {
         numberOfFeatures=0;
         scalerFitted=false;
       }
 
-      VerboseFlag& setVerbose(){
+      VerboseFlag& setVerbose()
+      {
         return verbose;
       }
 
     private:
-      unsigned numberOfFeatures;
+      size_t numberOfFeatures;
       bool scalerFitted=false;
       VerboseFlag verbose = VerboseFlag::Quiet;
       VectorXd colMean;
