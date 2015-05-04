@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
   Scaler scaler;
   trainData=scaler.fitTransform(trainData);
 
-  CrossValidation crossValidation{trainData, trainLabels};
+  CrossValidation crossValidation{trainData, trainLabels, true};
 
   size_t numberOfFeatures=trainData.cols();
   double gamma=0.5;

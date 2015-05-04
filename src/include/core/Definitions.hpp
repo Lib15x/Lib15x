@@ -22,6 +22,7 @@ namespace CPPLearn
 {
   enum class VerboseFlag {Quiet, Verbose};
   enum class ProblemType {Classification, Regression};
+  enum class Penalty {L1, L2};
   using std::array;
   using std::vector;
   using std::string;

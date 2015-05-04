@@ -31,8 +31,8 @@ namespace CPPLearn
        * @param C_ regularization constant.
        * @param tol_ stopping critiria.
        */
-      LibSVM(Kernel kernel_, size_t numberOfFeatures_,
-             double C_=1.0, double tol_=1e-5) :
+      LibSVM(const Kernel kernel_, const size_t numberOfFeatures_,
+             const double C_=1.0, const double tol_=1e-5) :
         kernel{kernel_}, numberOfFeatures{numberOfFeatures_}, svmModel{nullptr},
         C{C_}, numberOfTrainData{0}, tol{tol_} { }
 
@@ -109,7 +109,7 @@ namespace CPPLearn
                 svmProblem.x[indexJ][indexI+1].value;
           }
 
-        svmModel=svm_train(&svmProblem, &svmParameter);
+        svmModel=libsvm::svm_train(&svmProblem, &svmParameter);
 
         //copy SV into model struct
         libsvm::svm_node* vector_sv =
@@ -241,13 +241,13 @@ namespace CPPLearn
       //! Support vectors use libsvm index convenstion.
       vector<std::pair<size_t, VectorXd> > supportVectors;
       //! regularization parameter.
-      double C;
+      const double C;
       size_t numberOfTrainData;
       double tol;
       //! Indicates whether the model has been trained.
       bool modelTrained=false;
       //! cache size (MB) use by libsvm train.
-      double cacheSize=100;
+      const double cacheSize=100;
       VerboseFlag verbose = VerboseFlag::Quiet;
     };
   }
