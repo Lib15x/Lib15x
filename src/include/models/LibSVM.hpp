@@ -3,8 +3,8 @@
 
 #include <core/Definitions.hpp>
 #include <core/Utilities.hpp>
-#include <external/svm.h>
-#include <external/svm.cpp>
+#include <external/libsvm.h>
+#include <external/libsvm.cpp>
 
 namespace CPPLearn
 {

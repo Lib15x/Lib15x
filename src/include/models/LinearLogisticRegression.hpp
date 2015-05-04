@@ -27,14 +27,15 @@ namespace CPPLearn
       void train(const MatrixXd& trainData, const Labels& trainLabels)
       {
         if (trainLabels.labelType != ProblemType::Classification){
-          throwException("Error happen when training LibSVM model: "
+          throwException("Error happen when training LinearLogisticRegression model: "
                          "Input labelType must be Classification!\n");
         }
 
         const VectorXd& labelData=trainLabels.labelData;
 
         if ((unsigned)trainData.cols() != numberOfFeatures){
-          throwException("Error happen when training model, invalid inpute data: "
+          throwException("Error happen when training LinearLogisticRegression model, "
+                         "invalid inpute data: "
                          "expecting number of features from model: (%lu); "
                          "privided number of features from data: (%ld).\n",
                          numberOfFeatures, trainData.cols());
@@ -58,7 +59,7 @@ namespace CPPLearn
           break;
         default:
           {
-            throwException("Error happened when training logistic regression model:\n"
+            throwException("Error happened when training LinearLogisticRegression model:\n"
                            "the penalty type mush be either L1 or L2!\n");
           }
         }
@@ -97,12 +98,12 @@ namespace CPPLearn
       Labels predict(const MatrixXd& testData) const
       {
         if (!modelTrained){
-          throwException("Error happen when predicting with LibSVM model: "
+          throwException("Error happen when predicting with LinearLogisticRegression model: "
                          "Model has not been trained yet!");
         }
 
         if ((unsigned)testData.cols() != numberOfFeatures){
-          throwException("Error happen when predicting with LibSVM: "
+          throwException("Error happen when predicting with LinearLogisticRegression: "
                          "Invalid inpute data, "
                          "expecting number of features from model: (%lu); "
                          "privided number of features from data: (%ld).\n",
@@ -184,7 +185,7 @@ namespace CPPLearn
 
     private:
       const size_t numberOfFeatures;
-      //! SVM model defined in the libsvm library.
+      //! liblinear model defined in the liblinear library.
       liblinear::model* linearModel;
       const Penalty penaltyType;
       //! regularization parameter.
