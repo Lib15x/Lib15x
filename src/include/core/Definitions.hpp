@@ -18,23 +18,24 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/Sparse>
 
+using std::array;
+using std::vector;
+using std::string;
+using std::ifstream;
+using std::cout;
+using std::endl;
+using std::size_t;
+
+using Eigen::Matrix;
+using MatrixXd=Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+using Eigen::VectorXd;
+using Eigen::Map;
+
 namespace CPPLearn
 {
   enum class VerboseFlag {Quiet, Verbose};
   enum class ProblemType {Classification, Regression};
   enum class Penalty {L1, L2};
-  using std::array;
-  using std::vector;
-  using std::string;
-  using std::ifstream;
-  using std::cout;
-  using std::endl;
-  using std::size_t;
-
-  using Eigen::Matrix;
-  using MatrixXd=Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-  using Eigen::VectorXd;
-  using Eigen::Map;
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
   template <typename Variable>
