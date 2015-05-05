@@ -40,7 +40,7 @@ list(APPEND LIBS "-lipopt")
 
 
 #set compilation flag
-set(CMAKE_CXX_FLAGS "-Wall -g -Wextra -Wconversion -O3 -DEIGEN_DEBUG -std=c++1y -pthread ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-Wall -g -D_GLIBCXX_DEBUG -Wextra -Wconversion -O3 -DEIGEN_DEBUG -std=c++1y -pthread ${CMAKE_CXX_FLAGS}")
 
 include (CTest)
 set (CTEST_PROJECT_NAME "CPPLearn")
