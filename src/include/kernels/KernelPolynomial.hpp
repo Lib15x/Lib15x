@@ -8,27 +8,29 @@ namespace CPPLearn{
 
     class Polynomial{
     public:
-      Polynomial(double gamma_, double r_, unsigned d_) :
-        gamma{gamma_}, r{r_}, d{d_} {
-          if (gamma <= 0 || d == 0)
-            throw std::runtime_error("in constructor of polynomial kernel, "
-                                     "gamma and d should greater than zero!");
+      Polynomial(double gamma, double r, long d) :
+        _gamma{gamma}, _r{r}, _d{d} {
+          if (_gamma <= 0 || _d == 0){
+            throwException("in constructor of polynomial kernel, "
+                           "gamma and d should greater than zero!");
+          }
         }
 
       double operator()(const VectorXd& x, const VectorXd& y) const {
-        if (x.size() != y.size())
-          throw std::runtime_error("inside dot kernel, vector size mismatch!");
+        if (x.size() != y.size()){
+          throwException("inside dot kernel, vector size mismatch!");
+        }
         double result=1;
-        double base=(gamma*x.dot(y)+r);
-        for (size_t i=0; i<d; ++i)
+        double base=(_gamma*x.dot(y)+_r);
+        for (long i=0; i<_d; ++i)
           result *= base;
         return result;
       }
 
     private:
-      double gamma;
-      double r;
-      unsigned d;
+      double _gamma;
+      double _r;
+      long _d;
     };
   }
 }

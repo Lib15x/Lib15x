@@ -13,12 +13,12 @@ int main(int argc, char* argv[])
 
   string trainfilename="../../data/libsvm/heart_scale.cl";
 
-  auto trainPair= Utilities::readCPPLearnDataFile(trainfilename);
+  std::pair<MatrixXd, Labels> trainPair= Utilities::readCPPLearnDataFile(trainfilename);
   const MatrixXd& trainData=trainPair.first;
   const Labels& trainLabels=trainPair.second;
 
-  size_t numberOfData=trainData.rows();
-  size_t numberOfFeatures=trainData.cols();
+  const long numberOfData=trainData.rows();
+  const long numberOfFeatures=trainData.cols();
 
   const Penalty penaltyType = Penalty::L1;
   LearningModel learningModel{numberOfFeatures, penaltyType};
@@ -35,8 +35,8 @@ int main(int argc, char* argv[])
   printf ("It took me %ld clicks (%f seconds) for predicting.\n",t,((float)t)/CLOCKS_PER_SEC);
 
   double accuracy=1.0-LossFunction(predictedLabels, trainPair.second)/(double)numberOfData;
-  printf("accuracy = %f%%, (%u / %lu)\n", accuracy*100,
-         (unsigned)(accuracy*(double)numberOfData), numberOfData);
+  printf("accuracy = %f%%, (%ld / %ld)\n", accuracy*100,
+         (long)(accuracy*(double)numberOfData), numberOfData);
 
   return 0;
 }

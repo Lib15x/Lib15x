@@ -28,14 +28,14 @@ list(APPEND LIBS ${BLAS_LIBRARIES})
 #MESSAGE( ${LIBS})
 
 #include optimization library ipopt
-SET( IPOPT_DIR "$ENV{IPOPT_DIR}" )
-IF( NOT IPOPT_DIR )
-    MESSAGE( FATAL_ERROR "Please point the environment variable IPOPT_DIR to the directory of your Ipopt installation.")
-ENDIF()
-MESSAGE( STATUS "IPOPT_DIR:       " ${IPOPT_DIR} )
-INCLUDE_DIRECTORIES(${IPOPT_DIR}/include/coin)
-LINK_DIRECTORIES(${IPOPT_DIR}/lib)
-list(APPEND LIBS "-lipopt")
+#SET( IPOPT_DIR "$ENV{IPOPT_DIR}" )
+#IF( NOT IPOPT_DIR )
+    #MESSAGE( FATAL_ERROR "Please point the environment variable IPOPT_DIR to the directory of your Ipopt installation.")
+#ENDIF()
+#MESSAGE( STATUS "IPOPT_DIR:       " ${IPOPT_DIR} )
+#INCLUDE_DIRECTORIES(${IPOPT_DIR}/include/coin)
+#LINK_DIRECTORIES(${IPOPT_DIR}/lib)
+#list(APPEND LIBS "-lipopt")
 
 
 

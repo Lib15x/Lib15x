@@ -131,7 +131,7 @@ namespace CPPLearn
                                                   Utilities::TrimStyle::Trim);
 
       string incrementalPath;
-      for (unsigned int tokenIndex = 0; tokenIndex < tokens.size(); ++tokenIndex) {
+      for (long tokenIndex = 0; tokenIndex < static_cast<long>(tokens.size()); ++tokenIndex) {
 
         // keep building the incrementalPath
         if (tokenIndex > 0) {
@@ -177,7 +177,7 @@ namespace CPPLearn
       vector<int> labels;
       vector<vector<double> > data;
       string line;
-      size_t numberOfFeatures=0;
+      long numberOfFeatures=0;
 
       if (verboseFlag==VerboseFlag::Verbose)
         cout<<"Begin read data from: "<<libsvmFormatFileName<<endl;
@@ -191,10 +191,10 @@ namespace CPPLearn
         labels.push_back(atoi(tokens[0].c_str()));
         labelTypes.insert(atoi(tokens[0].c_str()));
 
-        size_t featIndex = 0;
-        for (size_t tokIndex=1; tokIndex<tokens.size(); ++tokIndex){
+        long featIndex = 0;
+        for (long tokIndex=1; tokIndex<static_cast<long>(tokens.size()); ++tokIndex){
           vector<string> subtokens = Utilities::tokenize(tokens[tokIndex], ":", TrimStyle::Trim);
-          size_t index=atoi(subtokens[0].c_str());
+          long index=atoi(subtokens[0].c_str());
           double value=atof(subtokens[1].c_str());
           while (featIndex<index-1){
             instance.push_back(0);
@@ -209,15 +209,15 @@ namespace CPPLearn
         data.push_back(std::move(instance));
       }
 
-      size_t labelCount=0;
-      std::map<int, size_t> labelMap;
+      long labelCount=0;
+      std::map<int, long> labelMap;
       for (auto& label : labelTypes){
-        labelMap.insert(std::pair<int, size_t>(label, labelCount));
+        labelMap.insert(std::pair<int, long>(label, labelCount));
         ++labelCount;
       }
-      assert(labelCount==labelTypes.size());
+      assert(labelCount==static_cast<long>(labelTypes.size()));
 
-      size_t numberOfData=labels.size();
+      long numberOfData=labels.size();
       FILE* outfile=fopen(cpplearnFileName.c_str(),"w");
       if (!outfile){
         throwException("Unable to open output file at %s\n",
@@ -229,10 +229,10 @@ namespace CPPLearn
 
       fprintf(outfile,"%lu %lu %s\n", numberOfData, numberOfFeatures, "Classification");
 
-      for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex){
+      for (long dataIndex=0; dataIndex<numberOfData; ++dataIndex){
         fprintf(outfile,"%lu ", labelMap[labels[dataIndex]]);
-        for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
-          if(featIndex<data[dataIndex].size())
+        for (long featIndex=0; featIndex<numberOfFeatures; ++featIndex){
+          if(featIndex<static_cast<long>(data[dataIndex].size()))
             fprintf(outfile,"%20.10e", data[dataIndex][featIndex]);
           else
             fprintf(outfile,"%20.10e ", 0.0);
@@ -271,8 +271,8 @@ namespace CPPLearn
                        filename.c_str());
       }
 
-      size_t numberOfData = atoi(tokens[0].c_str());
-      size_t numberOfFeatures = atoi(tokens[1].c_str());
+      long numberOfData = atoi(tokens[0].c_str());
+      long numberOfFeatures = atoi(tokens[1].c_str());
 
 
       if (tokens[2].compare("Classification") !=0 && tokens[2].compare("Regression") !=0){
@@ -286,10 +286,10 @@ namespace CPPLearn
 
       MatrixXd data{numberOfData, numberOfFeatures};
       Labels labels{problemType};
-      VectorXd& labelData=labels.labelData;
+      VectorXd& labelData=labels._labelData;
       labelData.resize(numberOfData);
 
-      for (size_t lineIndex=1; lineIndex<=numberOfData; ++lineIndex){
+      for (long lineIndex=1; lineIndex<=numberOfData; ++lineIndex){
         getline(file, line);
         if (line == ""){
           throwException("line number (%lu) is an empty line in the middel, "
@@ -298,14 +298,14 @@ namespace CPPLearn
         }
 
         vector<string> tokens = tokenize(line, " ", TrimStyle::Trim);
-        if (tokens.size() != numberOfFeatures+1){
+        if (static_cast<long>(tokens.size()) != numberOfFeatures+1){
           throwException("In line %lu, expected number of column is (%lu), "
                          "while the provide number of colum is (%lu)\n",
                          lineIndex, numberOfFeatures+1, tokens.size());
         }
 
         labelData(lineIndex-1)=atof(tokens[0].c_str());
-        for (size_t tokIndex=1; tokIndex<=numberOfFeatures; ++tokIndex)
+        for (long tokIndex=1; tokIndex<=numberOfFeatures; ++tokIndex)
           data(lineIndex-1, tokIndex-1) = atof(tokens[tokIndex].c_str());
       }
       getline(file, line);
@@ -319,26 +319,26 @@ namespace CPPLearn
     double computeStandardDeviation(const VectorXd& dataVec)
     {
       double mean=dataVec.mean();
-      size_t numberOfData=dataVec.size();
+      long numberOfData=dataVec.size();
       double var=0;
-      for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex)
+      for (long dataIndex=0; dataIndex<numberOfData; ++dataIndex)
         var+=(dataVec(dataIndex)-mean)*(dataVec(dataIndex)-mean);
 
-      var/=double(numberOfData)-1;
+      var/=static_cast<double>(numberOfData)-1.0;
       return sqrt(var);
     }
 
     double classificationZeroOneLossFunction(const Labels& predictedLabels,
                                              const Labels& testLabels)
     {
-      if (predictedLabels.labelType != ProblemType::Classification ||
-          testLabels.labelType != ProblemType::Classification) {
+      if (predictedLabels._labelType != ProblemType::Classification ||
+          testLabels._labelType != ProblemType::Classification) {
         throwException("Error happen when computing classsification error: "
                        "Input labelType must be Classification!\n");
       }
 
-      const VectorXd& predictedLabelData=predictedLabels.labelData;
-      const VectorXd& testLabelData=testLabels.labelData;
+      const VectorXd& predictedLabelData=predictedLabels._labelData;
+      const VectorXd& testLabelData=testLabels._labelData;
 
       if (predictedLabelData.size() != testLabelData.size()){
         throwException("Error happen when computing classsification error: "
@@ -348,11 +348,11 @@ namespace CPPLearn
                        predictedLabelData.size(), testLabelData.size());
       }
 
-      size_t numberOfData=predictedLabelData.size();
+      long numberOfData=predictedLabelData.size();
 
       double loss=0;
-      for (size_t dataId=0; dataId<numberOfData; ++dataId)
-        loss+=(double)(predictedLabelData(dataId)!=testLabelData(dataId));
+      for (long dataId=0; dataId<numberOfData; ++dataId)
+        loss+=static_cast<double>(predictedLabelData(dataId)!=testLabelData(dataId));
 
       return loss;
     }
@@ -360,14 +360,14 @@ namespace CPPLearn
     double regressionSquaredNormLossFunction(const Labels& predictedLabels,
                                              const Labels& testLabels)
     {
-      if (predictedLabels.labelType != ProblemType::Regression ||
-          testLabels.labelType != ProblemType::Regression){
+      if (predictedLabels._labelType != ProblemType::Regression ||
+          testLabels._labelType != ProblemType::Regression){
         throwException("Error happen when computing regression loss: "
                        "Input labelType must be Regression!\n");
       }
 
-      const VectorXd& predictedLabelData=predictedLabels.labelData;
-      const VectorXd& testLabelData=testLabels.labelData;
+      const VectorXd& predictedLabelData=predictedLabels._labelData;
+      const VectorXd& testLabelData=testLabels._labelData;
 
       if (predictedLabelData.size() != testLabelData.size()){
         throwException("Error happen when computing regression loss: "

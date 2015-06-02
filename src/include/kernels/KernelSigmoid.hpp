@@ -7,17 +7,18 @@ namespace CPPLearn{
 
     class Sigmoid{
     public:
-      Sigmoid(double gamma_, double r_) : gamma{gamma_}, r{r_} {}
+      Sigmoid(double gamma, double r) : _gamma{gamma}, _r{r} {}
 
       double operator()(const VectorXd& x, const VectorXd& y) const{
-        if (x.size() != y.size())
-          throw std::runtime_error("inside dot kernel, vector size mismatch!");
-        return tanh(gamma*x.dot(y)+r);
+        if (x.size() != y.size()){
+          throwException("inside dot kernel, vector size mismatch!");
+        }
+        return tanh(_gamma*x.dot(y)+_r);
       }
 
     private:
-      double gamma;
-      double r;
+      double _gamma;
+      double _r;
     };
   }
 }

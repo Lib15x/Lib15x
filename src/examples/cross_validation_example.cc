@@ -15,24 +15,24 @@ using MulticlassModel=Models::MulticlassClassifier<BinaryModel>;
 int main(int argc, char* argv[])
 {
   ignoreUnusedVariables(argc, argv);
-  string trainfilename="../../data/libsvm/train.2.cl";
+  string trainfilename = "../../data/libsvm/train.2.cl";
 
-  auto trainPair= Utilities::readCPPLearnDataFile(trainfilename);
-  MatrixXd& trainData=trainPair.first;
-  Labels& trainLabels=trainPair.second;
+  std::pair<MatrixXd, Labels> trainPair = Utilities::readCPPLearnDataFile(trainfilename);
+  MatrixXd& trainData = trainPair.first;
+  Labels& trainLabels = trainPair.second;
 
   Scaler scaler;
-  trainData=scaler.fitTransform(trainData);
+  trainData = scaler.fitTransform(trainData);
 
-  CrossValidation crossValidation{trainData, trainLabels, true};
+  const CrossValidation crossValidation{trainData, trainLabels, true};
 
-  size_t numberOfFeatures=trainData.cols();
-  double gamma=0.5;
+  const long numberOfFeatures=trainData.cols();
+  double gamma = 0.5;
 
   Kernel kernel{gamma};
   double C = 2.0;
   BinaryModel binaryModel{kernel, numberOfFeatures,C};
-  size_t numberOfClasses=(size_t)trainLabels.labelData.maxCoeff()+1;
+  long numberOfClasses = static_cast<long>(trainLabels._labelData.maxCoeff())+1;
   MulticlassModel multiclassModel{numberOfClasses, binaryModel};
 
   VectorXd losses=crossValidation.computeValidationLosses(&multiclassModel);

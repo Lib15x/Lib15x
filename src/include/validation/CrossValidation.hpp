@@ -8,45 +8,43 @@ namespace CPPLearn
   class CrossValidation
   {
   public:
-    static vector<vector<size_t > > KFolds(const size_t numberOfData,
-                                           const size_t numberOfFolds=5,
-                                           const bool shuffle=false,
-                                           const unsigned randomSeed=0);
+    static vector<vector<long> >
+    KFolds(const long numberOfData, const long numberOfFolds=5,
+           const bool shuffle=false, const long randomSeed=0);
 
-    static vector<vector<size_t > > StratifiedKFolds(const Labels& labels,
-                                                     const size_t numberOfFolds=5,
-                                                     const bool shuffle=false,
-                                                     const unsigned randomSeed=0);
+    static vector<vector<long> >
+    StratifiedKFolds(const Labels& labels, const long numberOfFolds=5,
+                     const bool shuffle=false, const long randomSeed=0);
 
     /**
      * Creates the model, with empty model initialized.
      *
      * @param
      */
-    CrossValidation(const MatrixXd& data_, const Labels& labels_,
-                    const unsigned int numberOfFolds_=5,
+    CrossValidation(const MatrixXd& data, const Labels& labels,
+                    const long numberOfFolds=5,
                     const bool shuffle=false) :
-      data{data_}, labels{labels_}, numberOfFolds{numberOfFolds_}
+      _data{data}, _labels{labels}, _numberOfFolds{numberOfFolds}
     {
-      size_t numberOfData = data.rows();
-      if (data.rows() != labels.labelData.size()){
+      long numberOfData = _data.rows();
+      if (_data.rows() != _labels._labelData.size()){
         throwException("Error happened in CrossValidation constructor:\n"
                        "Provided data and label sizes mismatch!\n"
-                       "number of data = (%lu), number of labels = (%ld).\n",
-                       numberOfData, labels.labelData.size());
+                       "number of data = (%ld), number of labels = (%ld).\n",
+                       numberOfData, _labels._labelData.size());
 
       }
 
-      if (numberOfFolds <= 1 || numberOfFolds > numberOfData){
+      if (_numberOfFolds <= 1 || _numberOfFolds > numberOfData){
         throwException("Error happened in CrossValidation constructor:\n"
                        "Number of folds must be greater than zero "
                        "and no larger than number of data! \n");
       }
 
-      switch (labels.labelType){
+      switch (_labels._labelType){
       case ProblemType::Classification :
         try {
-          foldsIndices=StratifiedKFolds(labels, numberOfFolds, shuffle);
+          _foldsIndices=StratifiedKFolds(_labels, _numberOfFolds, shuffle);
         }
         catch(std::exception& e) {
           printf("Error happend in CrossValidation constructor.\n");
@@ -55,7 +53,7 @@ namespace CPPLearn
         break;
       case ProblemType::Regression :
         try{
-          foldsIndices=KFolds((unsigned)labels.labelData.size(), numberOfFolds, shuffle);
+          _foldsIndices=KFolds(_labels._labelData.size(), _numberOfFolds, shuffle);
         }
         catch (std::exception& e){
           printf("Error happend in CrossValidation constructor.\n");
@@ -70,49 +68,47 @@ namespace CPPLearn
       }
     }
 
-    CrossValidation(const MatrixXd& data_, const Labels& labels_,
+    CrossValidation(const MatrixXd& data, const Labels& labels,
                     const bool shuffle) :
-      CrossValidation(data_, labels_, 5, shuffle) { }
+      CrossValidation(data, labels, 5, shuffle) { }
 
     template<class LearningModel>
-    VectorXd computeValidationLosses(LearningModel* learningModel)
+    VectorXd
+    computeValidationLosses(LearningModel* learningModel) const
     {
-      if (LearningModel::ModelType != labels.labelType){
+      if (LearningModel::ModelType != _labels._labelType) {
         throwException("Error happened when calling computeValidationScore function:"
                        "The learning model and labels have different problem types!\n");
       }
-
       double (*const LossFunction)(const Labels&, const Labels&)=LearningModel::LossFunction;
+      VectorXd losses{_numberOfFolds}; losses.fill(0);
+      long numberOfFeatures=_data.cols();
+      long numberOfData=_data.rows();
 
-      VectorXd losses(numberOfFolds);
-      size_t numberOfFeatures=data.cols();
-      size_t numberOfData=data.rows();
+      for (long currentRoundId =0; currentRoundId<_numberOfFolds; ++currentRoundId) {
+        const vector<long>& indicesOfThisFold = _foldsIndices[currentRoundId];
+        long numberOfTestsOfThisFold = static_cast<long>(indicesOfThisFold.size());
+        long numberOfTrainsOfThisFold=numberOfData-numberOfTestsOfThisFold;
 
-      for (auto& indicesOfThisFold : foldsIndices){
-        size_t currentRoundIndex=&indicesOfThisFold-&foldsIndices[0];
-        size_t numberOfTestsOfThisFold=indicesOfThisFold.size();
-        size_t numberOfTrainsOfThisFold=numberOfData-numberOfTestsOfThisFold;
+        MatrixXd trainDataOfThisFold{numberOfTrainsOfThisFold, numberOfFeatures};
+        MatrixXd testDataOfThisFold{numberOfTestsOfThisFold, numberOfFeatures};
 
-        MatrixXd trainDataOfThisFold(numberOfTrainsOfThisFold, numberOfFeatures);
-        MatrixXd testDataOfThisFold(numberOfTestsOfThisFold, numberOfFeatures);
+        Labels trainLabelsOfThisFold{_labels._labelType};
+        Labels testLabelsOfThisFold{_labels._labelType};
+        trainLabelsOfThisFold._labelData.resize(numberOfTrainsOfThisFold);
+        testLabelsOfThisFold._labelData.resize(numberOfTestsOfThisFold);
 
-        Labels trainLabelsOfThisFold{labels.labelType};
-        Labels testLabelsOfThisFold{labels.labelType};
-        trainLabelsOfThisFold.labelData.resize(numberOfTrainsOfThisFold);
-        testLabelsOfThisFold.labelData.resize(numberOfTestsOfThisFold);
-
-        for (auto& dataIndex : indicesOfThisFold){
-          size_t currentIndex=&dataIndex-&indicesOfThisFold[0];
-          testDataOfThisFold.row(currentIndex)=data.row(dataIndex);
-          testLabelsOfThisFold.labelData(currentIndex)=labels.labelData(dataIndex);
+        for (long id=0; id<numberOfTestsOfThisFold; ++id){
+          testDataOfThisFold.row(id) = _data.row(indicesOfThisFold[id]);
+          testLabelsOfThisFold._labelData(id) = _labels._labelData(indicesOfThisFold[id]);
         }
 
-        size_t trainDataIndex=0;
-        for (auto& indicesOfOtherFold : foldsIndices){
+        long trainDataIndex=0;
+        for (const auto& indicesOfOtherFold : _foldsIndices){
           if (&indicesOfOtherFold==&indicesOfThisFold) continue;
           for (auto& dataIndex : indicesOfOtherFold){
-            trainDataOfThisFold.row(trainDataIndex) = data.row(dataIndex);
-            trainLabelsOfThisFold.labelData(trainDataIndex)= labels.labelData(dataIndex);
+            trainDataOfThisFold.row(trainDataIndex) = _data.row(dataIndex);
+            trainLabelsOfThisFold._labelData(trainDataIndex)= _labels._labelData(dataIndex);
             ++trainDataIndex;
           }
         }
@@ -122,12 +118,12 @@ namespace CPPLearn
         try {
           learningModel->train(trainDataOfThisFold, trainLabelsOfThisFold);
           Labels predictedLabels = learningModel->predict(testDataOfThisFold);
-          losses(currentRoundIndex)=
-            LossFunction(predictedLabels, testLabelsOfThisFold)/(double)numberOfTestsOfThisFold;
+          losses(currentRoundId)=
+            LossFunction(predictedLabels, testLabelsOfThisFold)/static_cast<double>(numberOfTestsOfThisFold);
         }
         catch (std::exception& e){
           printf("Error happened in computeValidationScore function: "
-                 "CV round = (%lu).\n", currentRoundIndex);
+                 "CV round = (%ld).\n", currentRoundId);
           throw;
         }
       }
@@ -136,16 +132,15 @@ namespace CPPLearn
     };
 
   private:
-    vector<vector<size_t> > foldsIndices;
-    const MatrixXd& data;
-    const Labels& labels;
-    const size_t numberOfFolds;
+    vector<vector<long> > _foldsIndices;
+    const MatrixXd& _data;
+    const Labels& _labels;
+    const long _numberOfFolds;
   };
 
-  vector<vector<size_t > > CrossValidation::KFolds(const size_t numberOfData,
-                                                   const size_t numberOfFolds,
-                                                   const bool shuffle,
-                                                   const unsigned randomSeed)
+  vector<vector<long > >
+  CrossValidation::KFolds(const long numberOfData, const long numberOfFolds,
+                          const bool shuffle, const long randomSeed)
   {
     if (numberOfFolds <= 1 || numberOfFolds > numberOfData){
       throwException("Error happened in function KFold:\n"
@@ -153,42 +148,40 @@ namespace CPPLearn
                      "and no larger than number of data! \n");
     }
 
-    vector<size_t> indices; indices.reserve(numberOfData);
+    vector<long> indices; indices.reserve(numberOfData);
 
-    for (size_t index=0; index<numberOfData; ++index) indices.push_back(index);
+    for (long index=0; index<numberOfData; ++index) indices.push_back(index);
     if (shuffle){
-      std::shuffle(indices.begin(), indices.end(), std::default_random_engine(randomSeed));
+      std::shuffle(std::begin(indices), std::end(indices), std::default_random_engine(randomSeed));
     }
 
-    size_t meanFoldSize = numberOfData/numberOfFolds;
-    vector<size_t> foldSizes(numberOfFolds, meanFoldSize);
+    long meanFoldSize = numberOfData/numberOfFolds;
+    vector<long> foldSizes(numberOfFolds, meanFoldSize);
 
-    size_t unbalancedNumberOfFolds=numberOfData % numberOfFolds;
+    long unbalancedNumberOfFolds=numberOfData % numberOfFolds;
 
-    for (size_t foldIndex=0; foldIndex<unbalancedNumberOfFolds; ++foldIndex)
-      ++foldSizes[foldIndex];
+    std::transform(std::begin(foldSizes), std::begin(foldSizes)+unbalancedNumberOfFolds,
+                   std::begin(foldSizes), [](long i){return ++i;});
 
-    vector<vector<size_t> > foldsIndices;
+    vector<vector<long> > foldsIndices;
 
-    auto current = indices.begin();
-    for (auto& foldSize : foldSizes){
+    auto current = std::begin(indices);
+    for (const auto& foldSize : foldSizes){
       auto start=current;
       auto stop=current+foldSize;
-      vector<size_t> indicesOfThisFold(start, stop);
-      foldsIndices.push_back(std::move(indicesOfThisFold));
+      foldsIndices.emplace_back(start, stop);
       current = stop;
     }
 
     return foldsIndices;
   }
 
-  vector<vector<size_t > > CrossValidation::StratifiedKFolds(const Labels& labels,
-                                                             const size_t numberOfFolds,
-                                                             const bool shuffle,
-                                                             const unsigned randomSeed)
+  vector<vector<long > >
+  CrossValidation::StratifiedKFolds(const Labels& labels, const long numberOfFolds,
+                                    const bool shuffle, const long randomSeed)
   {
-    size_t numberOfData=labels.labelData.size();
-    const VectorXd& labelData=labels.labelData;
+    const long numberOfData=labels._labelData.size();
+    const VectorXd& labelData=labels._labelData;
 
     if (numberOfFolds <= 1 || numberOfFolds > numberOfData){
       throwException("Error happened in function StratifiedKFold:\n"
@@ -196,86 +189,85 @@ namespace CPPLearn
                      "and no larger than number of data! \n");
     }
 
-    if (labels.labelType != ProblemType::Classification){
+    if (labels._labelType != ProblemType::Classification){
       throwException("Error happened in function StratifiedKFold:\n"
                      "Label type should be Classification.\n ");
     }
 
-    //const size_t numberOfClasses = *std::max_element(&labelData[0], &labelData[numberOfData-1]);
-    const size_t numberOfClasses=(size_t)labelData.maxCoeff()+1;
-    vector<size_t> labelsCount(numberOfClasses, 0);
+    const long numberOfClasses=static_cast<long>(labelData.maxCoeff())+1;
+    vector<long> labelsCount(numberOfClasses, 0);
 
-    for (size_t labelIndex=0; labelIndex<numberOfData; ++ labelIndex){
+    for (long labelIndex=0; labelIndex<numberOfData; ++labelIndex){
       if (labelData(labelIndex) < 0 || labelData(labelIndex) >= numberOfClasses){
         throwException("Error happened in function StratifiedKFold:\n"
-                       "number of classes is (%lu), "
-                       "thus  I am expecting label range between (0) and (%lu)! "
-                       "the (%lu)th label is (%f)!",
+                       "number of classes is (%ld), "
+                       "thus  I am expecting label range between (0) and (%ld)! "
+                       "the (%ld)th label is (%f)!",
                        numberOfClasses, numberOfClasses-1,
                        labelIndex, labelData(labelIndex));
       }
-      ++labelsCount[(size_t)labelData(labelIndex)];
+      ++labelsCount[static_cast<long>(labelData(labelIndex))];
     }
 
     for (auto& labelCount : labelsCount)
       if (labelCount == 0){
         throwException("Error happened in function StratifiedKFold:\n"
-                       "None of the provided training data is classified to class (%lu). "
+                       "None of the provided training data is classified to class (%ld). "
                        "You need to consider reducing the input number of classes!\n",
                        &labelCount-&labelsCount[0]);
       }
 
-    size_t minLabelCount = *std::min_element(labelsCount.begin(), labelsCount.end());
+    const auto minLabelCount = *std::min_element(std::begin(labelsCount), std::end(labelsCount));
 
     if (numberOfFolds > minLabelCount){
       throwException("Error from function StratifiedKFold:\n"
-                     "The least polulated label has (%lu) "
+                     "The least polulated label has (%ld) "
                      "members, which is too few. The minimum"
                      "number of labels for any class cannot"
-                     "be less than number of folds = (%lu).",
+                     "be less than number of folds = (%ld).",
                      minLabelCount, numberOfFolds);
     }
 
-    vector<vector<vector<size_t> > > eachClassKFolds(numberOfClasses);
-    for (size_t classId=0; classId<numberOfClasses; ++classId)
-      eachClassKFolds[classId]=KFolds(labelsCount[classId], numberOfFolds,
-                                      shuffle, randomSeed + (unsigned)classId);
+    vector<vector<vector<long> > > eachClassKFolds{static_cast<unsigned>(numberOfClasses)};
 
+    for (long classId = 0; classId<numberOfClasses; ++classId)
+      eachClassKFolds[classId] = KFolds(labelsCount[classId], numberOfFolds,
+                                        shuffle, randomSeed + classId);
 
-    vector<vector<size_t> > eachClassIndexMapToFold;
-    for (size_t classId=0; classId<numberOfClasses; ++classId){
-      const vector<vector<size_t> >& thisClassKFolds = eachClassKFolds[classId];
-      vector<size_t> thisClassIndexMapToFold(labelsCount[classId]);
-      for (size_t foldId=0; foldId<numberOfFolds; ++foldId)
-        for (auto& index : thisClassKFolds[foldId])
+    vector<vector<long> > eachClassIndexMapToFold;
+    for (long classId=0; classId<numberOfClasses; ++classId){
+      const vector<vector<long> >& thisClassKFolds = eachClassKFolds[classId];
+      vector<long> thisClassIndexMapToFold(labelsCount[classId]);
+      for (long foldId=0; foldId<numberOfFolds; ++foldId)
+        for (const auto& index : thisClassKFolds[foldId])
           thisClassIndexMapToFold[index]=foldId;
       eachClassIndexMapToFold.push_back(std::move(thisClassIndexMapToFold));
     }
 
-    vector<size_t> testFolds(numberOfData);
-    vector<size_t> foldSizes(numberOfFolds, 0);
-    vector<size_t> labelsReCount(numberOfClasses, 0);
+    vector<long> testFolds(numberOfData);
+    vector<long> foldSizes(numberOfFolds, 0);
+    vector<long> labelsReCount(numberOfClasses, 0);
 
-    for (size_t dataId=0; dataId<numberOfData; ++dataId){
-      const size_t thisLabel= (unsigned) labelData[dataId];
-      size_t foldIndex=eachClassIndexMapToFold[thisLabel][labelsReCount[thisLabel]];
+    for (long dataId=0; dataId<numberOfData; ++dataId){
+      const long thisLabel = static_cast<long>(labelData[dataId]);
+      const long foldIndex=eachClassIndexMapToFold[thisLabel][labelsReCount[thisLabel]];
       testFolds[dataId] = foldIndex;
       ++labelsReCount[thisLabel];
       ++foldSizes[foldIndex];
     }
 
-    for (size_t classId=0; classId<numberOfClasses; ++classId)
+    for (long classId=0; classId<numberOfClasses; ++classId)
       assert(labelsReCount[classId]==labelsCount[classId]);
 
-    vector<vector<size_t> > foldsIndices;
-    for (size_t foldId=0; foldId<numberOfFolds; ++foldId){
-      vector<size_t> indicesOfThisFold;
+    vector<vector<long> > foldsIndices;
+    for (long foldId=0; foldId<numberOfFolds; ++foldId){
+      vector<long> indicesOfThisFold;
       indicesOfThisFold.reserve(foldSizes[foldId]);
       foldsIndices.push_back(std::move(indicesOfThisFold));
     }
 
-    for (size_t dataId=0; dataId<numberOfData; ++dataId){
-      size_t foldIndex=testFolds[dataId];
+    for (long dataId=0; dataId<numberOfData; ++dataId){
+      long foldIndex=testFolds[dataId];
       foldsIndices[foldIndex].push_back(dataId);
     }
 

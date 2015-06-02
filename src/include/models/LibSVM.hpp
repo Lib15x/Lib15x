@@ -20,7 +20,6 @@ namespace CPPLearn
       static constexpr const char* ModelName="LibSVM";
       static constexpr double (*LossFunction)(const Labels&, const Labels&)=
         Utilities::classificationZeroOneLossFunction;
-
       /**
        * Creates the model, with empty model initialized.
        *
@@ -31,10 +30,10 @@ namespace CPPLearn
        * @param C_ regularization constant.
        * @param tol_ stopping critiria.
        */
-      LibSVM(const Kernel kernel_, const size_t numberOfFeatures_,
-             const double C_=1.0, const double tol_=1e-5) :
-        kernel{kernel_}, numberOfFeatures{numberOfFeatures_}, svmModel{nullptr},
-        C{C_}, numberOfTrainData{0}, tol{tol_} { }
+      LibSVM(const Kernel kernel, const long numberOfFeatures,
+             const double C=1.0, const double tol=1e-5) :
+        _kernel{std::move(kernel)}, _numberOfFeatures{numberOfFeatures},
+        _svmModel{nullptr}, _C{C}, _numberOfTrainData{0}, _tol{tol} { }
 
       /**
        * Train the model, the provided data and labels should have the some number of instance.
@@ -45,18 +44,18 @@ namespace CPPLearn
        */
       void train(const MatrixXd& trainData, const Labels& trainLabels)
       {
-        if (trainLabels.labelType != ProblemType::Classification){
+        if (trainLabels._labelType != ProblemType::Classification){
           throwException("Error happen when training LibSVM model: "
                          "Input labelType must be Classification!\n");
         }
 
-        const VectorXd& labelData=trainLabels.labelData;
+        const VectorXd& labelData=trainLabels._labelData;
 
-        if ((unsigned)trainData.cols() != numberOfFeatures){
+        if (trainData.cols() != _numberOfFeatures){
           throwException("Error happen when training model, invalid inpute data: "
-                         "expecting number of features from model: (%lu); "
+                         "expecting number of features from model: (%ld); "
                          "privided number of features from data: (%ld).\n",
-                         numberOfFeatures, trainData.cols());
+                         _numberOfFeatures, trainData.cols());
         }
 
         if (trainData.rows() != labelData.size()){
@@ -66,14 +65,14 @@ namespace CPPLearn
                          trainData.rows(), labelData.size());
         }
 
-        numberOfTrainData = trainData.rows();
+        _numberOfTrainData = trainData.rows();
 
         libsvm::svm_parameter svmParameter;
         svmParameter.svm_type=libsvm::C_SVC;
         svmParameter.kernel_type=libsvm::PRECOMPUTED;
-        svmParameter.C=C;
-        svmParameter.eps=tol;
-        svmParameter.cache_size=cacheSize;
+        svmParameter.C=_C;
+        svmParameter.eps=_tol;
+        svmParameter.cache_size=_cacheSize;
         svmParameter.nr_weight = 0;
         svmParameter.weight_label = NULL;
         svmParameter.weight = NULL;
@@ -81,55 +80,52 @@ namespace CPPLearn
         svmParameter.probability = 0;
 
         libsvm::svm_problem svmProblem;
-        svmProblem.l=(int)numberOfTrainData;
-        svmProblem.y=new double[numberOfTrainData];
-        svmProblem.x=new libsvm::svm_node*[numberOfTrainData];
-        libsvm::svm_node* vector_x=
-          new libsvm::svm_node[numberOfTrainData*(numberOfTrainData+2)];
+        svmProblem.l = static_cast<int>(_numberOfTrainData);
+        svmProblem.y=new double[_numberOfTrainData];
+        svmProblem.x=new libsvm::svm_node*[_numberOfTrainData];
+        auto vector_x= new libsvm::svm_node[_numberOfTrainData*(_numberOfTrainData+2)];
 
-        for (size_t dataIndex=0; dataIndex<numberOfTrainData; ++dataIndex){
+        for (long dataIndex=0; dataIndex<_numberOfTrainData; ++dataIndex){
           svmProblem.y[dataIndex]=labelData(dataIndex);
-          svmProblem.x[dataIndex]=vector_x+(numberOfTrainData+2)*dataIndex;
+          svmProblem.x[dataIndex]=vector_x+(_numberOfTrainData+2)*dataIndex;
           svmProblem.x[dataIndex]->index=0;
-          svmProblem.x[dataIndex]->value=(double)dataIndex+1;
-          (svmProblem.x[dataIndex]+numberOfTrainData+1)->index=-1;
-          (svmProblem.x[dataIndex]+numberOfTrainData+1)->value=0;
+          svmProblem.x[dataIndex]->value=static_cast<double>(dataIndex)+1.0;
+          (svmProblem.x[dataIndex]+_numberOfTrainData+1)->index=-1;
+          (svmProblem.x[dataIndex]+_numberOfTrainData+1)->value=0;
         }
 
-        for (size_t indexI=0; indexI<numberOfTrainData; ++indexI)
-          for (size_t indexJ=0; indexJ<numberOfTrainData; ++indexJ){
-            svmProblem.x[indexI][indexJ+1].index=(int)indexJ+1;
+        for (long indexI=0; indexI<_numberOfTrainData; ++indexI)
+          for (long indexJ=0; indexJ<_numberOfTrainData; ++indexJ){
+            svmProblem.x[indexI][indexJ+1].index=static_cast<int>(indexJ)+1;
             if (indexI <= indexJ){
-              Map<const VectorXd> dataI(&trainData(indexI,0),numberOfFeatures);
-              Map<const VectorXd> dataJ(&trainData(indexJ,0),numberOfFeatures);
-              svmProblem.x[indexI][indexJ+1].value=kernel(dataI,dataJ);
+              Map<const VectorXd> dataI(&trainData(indexI,0),_numberOfFeatures);
+              Map<const VectorXd> dataJ(&trainData(indexJ,0),_numberOfFeatures);
+              svmProblem.x[indexI][indexJ+1].value=_kernel(dataI,dataJ);
             }
             else
               svmProblem.x[indexI][indexJ+1].value=
                 svmProblem.x[indexJ][indexI+1].value;
           }
 
-        svmModel=libsvm::svm_train(&svmProblem, &svmParameter);
+        _svmModel=libsvm::svm_train(&svmProblem, &svmParameter);
 
         //copy SV into model struct
-        libsvm::svm_node* vector_sv =
-          (libsvm::svm_node*)malloc(svmModel->l*sizeof(libsvm::svm_node));
-        for (size_t svIndex=0; svIndex<(unsigned)svmModel->l; ++svIndex){
+        auto vector_sv = (libsvm::svm_node*)malloc(_svmModel->l*sizeof(libsvm::svm_node));
+        for (long svIndex=0l; svIndex<_svmModel->l; ++svIndex){
           (vector_sv + svIndex)->index=0;
-          (vector_sv + svIndex)->value=svmModel->SV[svIndex]->value;
-          svmModel->SV[svIndex] = vector_sv + svIndex;
+          (vector_sv + svIndex)->value=_svmModel->SV[svIndex]->value;
+          _svmModel->SV[svIndex] = vector_sv + svIndex;
         }
 
         //hand duty to free SV to svm_model
-        svmModel->free_sv=1;
+        _svmModel->free_sv=1;
 
-        for (size_t svId=0; svId<(unsigned)svmModel->l; ++svId){
-          size_t index=static_cast<unsigned>(svmModel->SV[svId]->value);
-          VectorXd supportVector=trainData.row(index-1);
-          supportVectors.push_back(std::pair<size_t,VectorXd> (index, std::move(supportVector)));
+        for (long svId=0l; svId<_svmModel->l; ++svId){
+          const long& index=static_cast<long>(_svmModel->SV[svId]->value);
+          _supportVectors.push_back(std::make_pair(index, trainData.row(index-1)));
         }
 
-        modelTrained=true;
+        _modelTrained=true;
         delete[] svmProblem.x;
         delete[] svmProblem.y;
         delete[] vector_x;
@@ -144,66 +140,68 @@ namespace CPPLearn
        */
       Labels predict(const MatrixXd& testData) const
       {
-        if (!modelTrained){
+        if (!_modelTrained){
           throwException("Error happen when predicting with LibSVM model: "
                          "Model has not been trained yet!");
         }
 
-        if ((unsigned)testData.cols() != numberOfFeatures){
+        if (testData.cols() != _numberOfFeatures){
           throwException("Error happen when predicting with LibSVM: "
                          "Invalid inpute data, "
-                         "expecting number of features from model: (%lu); "
+                         "expecting number of features from model: (%ld); "
                          "privided number of features from data: (%ld).\n",
-                         numberOfFeatures, testData.cols());
+                         _numberOfFeatures, testData.cols());
         }
 
-        size_t numberOfTests=testData.rows();
-        Labels predictedLabels(ProblemType::Classification);
-        predictedLabels.labelData.resize(numberOfTests);
+        const long numberOfTests=testData.rows();
+        Labels predictedLabels{ProblemType::Classification};
+        predictedLabels._labelData.resize(numberOfTests);
 
-        for (size_t rowIndex=0; rowIndex<numberOfTests; ++rowIndex)
-          predictedLabels.labelData(rowIndex) = predictOne(testData.row(rowIndex));
+        for (long rowIndex=0; rowIndex<numberOfTests; ++rowIndex){
+          Map<const VectorXd> instance{&testData(rowIndex, 0), _numberOfFeatures};
+          predictedLabels._labelData(rowIndex) = predictOne(instance);
+        }
 
         return predictedLabels;
       }
 
       double predictOne(const VectorXd& instance) const
       {
-        libsvm::svm_node* kerVec=new libsvm::svm_node[numberOfTrainData+2];
-        kerVec[numberOfTrainData+1].index=-1;
-        kerVec[numberOfTrainData+1].value=0;
+        auto kerVec=new libsvm::svm_node[_numberOfTrainData+2];
+        kerVec[_numberOfTrainData+1].index=-1;
+        kerVec[_numberOfTrainData+1].value=0;
         kerVec[0].index=0;
 
-        for (auto& sv : supportVectors){
-          kerVec[sv.first].index=(int)sv.first;
-          kerVec[sv.first].value=kernel(instance, sv.second);
+        for (const auto& sv : _supportVectors){
+          kerVec[sv.first].index=static_cast<int>(sv.first);
+          kerVec[sv.first].value=_kernel(instance, sv.second);
         }
 
-        double result = libsvm::svm_predict(svmModel,kerVec);
-
+        double result = libsvm::svm_predict(_svmModel,kerVec);
         delete[] kerVec;
+
         return result;
       }
 
       /**
        * Each row is a SV.
        */
-      const size_t& getNumberOfFeatures() const
+      const long& getNumberOfFeatures() const
       {
-        return numberOfFeatures;
+        return _numberOfFeatures;
       }
 
       MatrixXd getSupportVectors() const
       {
-        if (!modelTrained){
+        if (!_modelTrained){
           throwException("model has not been trained yet!");
         }
 
-        size_t numberOfSVs=supportVectors.size();
+        const long numberOfSVs=static_cast<long>(_supportVectors.size());
 
-        MatrixXd supportVectorData(numberOfSVs, numberOfFeatures);
-        for (size_t svIndex=0; svIndex<numberOfSVs; ++svIndex)
-          supportVectorData.row(svIndex)=supportVectors[svIndex].second;
+        MatrixXd supportVectorData{numberOfSVs, _numberOfFeatures};
+        for (long svIndex=0; svIndex<numberOfSVs; ++svIndex)
+          supportVectorData.row(svIndex)=_supportVectors[svIndex].second;
 
         return supportVectorData;
       };
@@ -213,16 +211,16 @@ namespace CPPLearn
        */
       void clear()
       {
-        libsvm::svm_free_and_destroy_model(&svmModel);
-        svmModel=nullptr;
-        supportVectors.clear();
-        numberOfTrainData=0;
-        modelTrained=false;
+        libsvm::svm_free_and_destroy_model(&_svmModel);
+        _svmModel=nullptr;
+        _supportVectors.clear();
+        _numberOfTrainData=0;
+        _modelTrained=false;
       }
 
       VerboseFlag& whetherVerbose()
       {
-        return verbose;
+        return _verbose;
       }
 
       /**
@@ -230,25 +228,25 @@ namespace CPPLearn
        */
       ~LibSVM()
       {
-        libsvm::svm_free_and_destroy_model(&svmModel);
+        libsvm::svm_free_and_destroy_model(&_svmModel);
       }
 
     private:
-      const Kernel kernel;
-      const size_t numberOfFeatures;
+      const Kernel _kernel;
+      const long _numberOfFeatures;
       //! SVM model defined in the libsvm library.
-      libsvm::svm_model* svmModel;
+      libsvm::svm_model* _svmModel;
       //! Support vectors use libsvm index convenstion.
-      vector<std::pair<size_t, VectorXd> > supportVectors;
+      vector<std::pair<long, VectorXd> > _supportVectors;
       //! regularization parameter.
-      const double C;
-      size_t numberOfTrainData;
-      double tol;
+      const double _C;
+      long _numberOfTrainData;
+      double _tol;
       //! Indicates whether the model has been trained.
-      bool modelTrained=false;
+      bool _modelTrained=false;
       //! cache size (MB) use by libsvm train.
-      const double cacheSize=100;
-      VerboseFlag verbose = VerboseFlag::Quiet;
+      const double _cacheSize=100;
+      VerboseFlag _verbose = VerboseFlag::Quiet;
     };
   }
 }

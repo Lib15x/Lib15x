@@ -13,34 +13,38 @@ int main(int argc, char* argv[])
   ignoreUnusedVariables(argc, argv);
   constexpr double (*LossFunction)(const Labels&, const Labels&)=LearningModel::LossFunction;
 
-  string trainfilename="../../data/test/libsvm_train_1.cl";
+  const string trainfilename="../../data/test/libsvm_train_1.cl";
 
-  auto trainPair= Utilities::readCPPLearnDataFile(trainfilename);
+  const std::pair<MatrixXd, Labels> trainPair= Utilities::readCPPLearnDataFile(trainfilename);
   const MatrixXd& trainData=trainPair.first;
   const Labels& trainLabels=trainPair.second;
 
-  size_t numberOfData=trainData.rows();
-  size_t numberOfFeatures=trainData.cols();
-  double gamma=1.0/(double)numberOfFeatures;
+  const long numberOfData=trainData.rows();
+  const long numberOfFeatures=trainData.cols();
+  const double gamma=1.0/static_cast<double>(numberOfFeatures);
 
-  Kernel kernel{gamma};
+  const Kernel kernel{gamma};
   LearningModel learningModel{kernel, numberOfFeatures};
 
   clock_t t;
   t=clock();
   learningModel.train(trainData, trainLabels);
   t=clock()-t;
-  printf ("It took me %ld clicks (%f seconds) for training.\n",t,((float)t)/CLOCKS_PER_SEC);
+  printf ("It took me %ld clicks (%f seconds) for training.\n",
+          t, (double)t/CLOCKS_PER_SEC);
+
   cout<<"number of support vectors: "<<learningModel.getSupportVectors().rows()<<endl;
 
   t=clock();
   Labels predictedLabels=learningModel.predict(trainPair.first);
   t=clock()-t;
-  printf ("It took me %ld clicks (%f seconds) for predicting.\n",t,((float)t)/CLOCKS_PER_SEC);
+  printf ("It took me %ld clicks (%f seconds) for predicting.\n",
+          t, (double)t/CLOCKS_PER_SEC);
 
-  double accuracy=1.0-LossFunction(predictedLabels, trainPair.second)/(double)numberOfData;
-  printf("accuracy = %f%%, (%u / %lu)\n", accuracy*100,
-         (unsigned)(accuracy*(double)numberOfData), numberOfData);
+  double accuracy=1.0-LossFunction(predictedLabels, trainPair.second)
+    /static_cast<double>(numberOfData);
+  printf("accuracy = %f%%, (%ld / %ld)\n", accuracy*100,
+         (long)(accuracy*(double)numberOfData), numberOfData);
 
   return 0;
 }

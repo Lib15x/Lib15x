@@ -11,8 +11,9 @@ namespace CPPLearn{
       Dot(){}
 
       double operator()(const VectorXd& x, const VectorXd& y) const {
-        if (x.size() != y.size())
-          throw std::runtime_error("inside dot kernel, vector size mismatch!");
+        if (x.size() != y.size()){
+          throwException("inside dot kernel, vector size mismatch!");
+        }
         return x.dot(y);
       }
     };

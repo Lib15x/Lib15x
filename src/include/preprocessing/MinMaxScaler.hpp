@@ -18,8 +18,8 @@ namespace CPPLearn
        *
        * @param
        */
-      MinMaxScaler(const double lowerBound_=-1.0, const double upperBound_=1.0):
-        lowerBound{lowerBound_}, upperBound{upperBound_} {}
+      MinMaxScaler(const double lowerBound=-1.0, const double upperBound=1.0):
+        _lowerBound{lowerBound}, _upperBound{upperBound} {}
       /**
        * brief description
        *
@@ -27,17 +27,17 @@ namespace CPPLearn
        */
       void fit(const MatrixXd& data)
       {
-        numberOfFeatures = (unsigned)data.cols();
-        colMax.resize(numberOfFeatures);
-        colMin.resize(numberOfFeatures);
-        for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
-          colMax(featIndex)=data.col(featIndex).maxCoeff();
-          colMin(featIndex)=data.col(featIndex).minCoeff();
-          if (colMax(featIndex)==colMin(featIndex))
+        _numberOfFeatures = data.cols();
+        _colMax.resize(_numberOfFeatures);
+        _colMin.resize(_numberOfFeatures);
+        for (long featIndex=0; featIndex<_numberOfFeatures; ++featIndex){
+          _colMax(featIndex)=data.col(featIndex).maxCoeff();
+          _colMin(featIndex)=data.col(featIndex).minCoeff();
+          if (_colMax(featIndex)==_colMin(featIndex))
             printf("Warning from MinMax scaler: "
-                   "I found the data for feature No.(%lu) are the same.", featIndex);
+                   "I found the data for feature No.(%ld) are the same.", featIndex);
         }
-        scalerFitted=true;
+        _scalerFitted=true;
       }
 
       /**
@@ -47,29 +47,29 @@ namespace CPPLearn
        */
       MatrixXd transform(const MatrixXd& data) const
       {
-        if (!scalerFitted){
+        if (!_scalerFitted){
           throwException("Error happened when transform data using MinMax scaler: "
                          "Scaler has not been fitted yet!");
         }
 
-        if ((size_t)data.cols() != numberOfFeatures){
+        if (data.cols() != _numberOfFeatures){
           throwException("Error happened when transform data using MinMax scaler: "
-                         "expecting number of features from scaler: (%lu); "
+                         "expecting number of features from scaler: (%ld); "
                          "privided number of features from data: (%ld).\n",
-                         numberOfFeatures, data.cols());
+                         _numberOfFeatures, data.cols());
         }
 
-        double range=upperBound-lowerBound;
-        size_t numberOfData=data.rows();
+        double range = _upperBound-_lowerBound;
+        long numberOfData = data.rows();
         MatrixXd transformedData(data.rows(), data.cols());
-        for (size_t dataIndex=0; dataIndex<numberOfData; ++dataIndex){
-          for (size_t featIndex=0; featIndex<numberOfFeatures; ++featIndex){
-            if (colMax(featIndex)==colMin(featIndex))
+        for (long dataIndex=0; dataIndex<numberOfData; ++dataIndex){
+          for (long featIndex=0; featIndex<_numberOfFeatures; ++featIndex){
+            if (_colMax(featIndex) == _colMin(featIndex))
               transformedData(dataIndex,featIndex)=data(dataIndex,featIndex);
             else
               transformedData(dataIndex,featIndex)=
-                lowerBound+range/(colMax(featIndex)-colMin(featIndex))
-                *(data(dataIndex, featIndex)-colMin(featIndex));
+                _lowerBound+range/(_colMax(featIndex)-_colMin(featIndex))
+                *(data(dataIndex, featIndex)-_colMin(featIndex));
           }
         }
         return transformedData;
@@ -91,22 +91,22 @@ namespace CPPLearn
        */
       void clear()
       {
-        numberOfFeatures=0;
-        scalerFitted=false;
+        _numberOfFeatures=0;
+        _scalerFitted=false;
       }
 
       VerboseFlag& setVerbose(){
-        return verbose;
+        return _verbose;
       }
 
     private:
-      size_t numberOfFeatures;
-      bool scalerFitted=false;
-      VerboseFlag verbose = VerboseFlag::Quiet;
-      double lowerBound;
-      double upperBound;
-      VectorXd colMax;
-      VectorXd colMin;
+      long _numberOfFeatures;
+      bool _scalerFitted=false;
+      VerboseFlag _verbose = VerboseFlag::Quiet;
+      double _lowerBound;
+      double _upperBound;
+      VectorXd _colMax;
+      VectorXd _colMin;
     };
   }
 }
