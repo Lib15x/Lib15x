@@ -1,8 +1,8 @@
 #ifndef MODEL_LINEAR_RIDGE_REGRESSION
 #define MODEL_LINEAR_RIDGE_REGRESSION
 
-#include <core/Definitions.hpp>
-#include <core/Utilities.hpp>
+#include "../core/Definitions.hpp"
+#include "../core/Utilities.hpp"
 
 namespace CPPLearn
 {

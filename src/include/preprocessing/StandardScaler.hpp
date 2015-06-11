@@ -1,7 +1,7 @@
 #ifndef PREPROCESSING_STANDARD_SCALER
 #define PREPROCESSING_STANDARD_SCALER
 
-#include <core/Definitions.hpp>
+#include "../core/Definitions.hpp"
 
 namespace CPPLearn
 {

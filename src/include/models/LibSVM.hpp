@@ -1,10 +1,10 @@
 #ifndef MODEL_LIBSVM
 #define MODEL_LIBSVM
 
-#include <core/Definitions.hpp>
-#include <core/Utilities.hpp>
-#include <external/libsvm.h>
-#include <external/libsvm.cpp>
+#include "../core/Definitions.hpp"
+#include "../core/Utilities.hpp"
+#include "../external/libsvm.h"
+#include "../external/libsvm.cpp"
 
 namespace CPPLearn
 {
@@ -138,7 +138,8 @@ namespace CPPLearn
        * @param testData predictors, the number of columns should be the
        * same as number of features.
        */
-      Labels predict(const MatrixXd& testData) const
+      Labels
+      predict(const MatrixXd& testData) const
       {
         if (!_modelTrained){
           throwException("Error happen when predicting with LibSVM model: "
@@ -165,7 +166,8 @@ namespace CPPLearn
         return predictedLabels;
       }
 
-      double predictOne(const VectorXd& instance) const
+      double
+      predictOne(const VectorXd& instance) const
       {
         auto kerVec=new libsvm::svm_node[_numberOfTrainData+2];
         kerVec[_numberOfTrainData+1].index=-1;

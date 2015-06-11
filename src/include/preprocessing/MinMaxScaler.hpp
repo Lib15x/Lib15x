@@ -1,7 +1,7 @@
 #ifndef PREPROCESSING_MINMAX_SCALER
 #define PREPROCESSING_MINMAX_SCALER
 
-#include <core/Definitions.hpp>
+#include "../core/Definitions.hpp"
 
 namespace CPPLearn
 {

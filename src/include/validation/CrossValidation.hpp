@@ -1,4 +1,6 @@
-#include <core/Definitions.hpp>
+#ifndef CROSS_VALIDATION
+#define CROSS_VALIDATION
+#include "../core/Definitions.hpp"
 
 namespace CPPLearn
 {
@@ -274,3 +276,5 @@ namespace CPPLearn
     return foldsIndices;
   }
 }
+
+#endif //CROSS_VALIDATION

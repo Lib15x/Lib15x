@@ -1,7 +1,7 @@
 #ifndef KERNEL_DOT
 #define KERNEL_DOT
 
-#include <core/Definitions.hpp>
+#include "../core/Definitions.hpp"
 
 namespace CPPLearn{
   namespace Kernels{

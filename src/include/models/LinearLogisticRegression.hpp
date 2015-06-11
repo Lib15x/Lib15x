@@ -1,16 +1,16 @@
 #ifndef MODEL_LINEAR_LOGISTIC_REGRESSION
 #define MODEL_LINEAR_LOGISTIC_REGRESSION
 
-#include <core/Definitions.hpp>
-#include <core/Utilities.hpp>
-#include <external/liblinear.h>
-#include <external/liblinear.cpp>
+#include "../core/Definitions.hpp"
+#include "../core/Utilities.hpp"
+#include "../external/liblinear.h"
+#include "../external/liblinear.cpp"
 
 namespace CPPLearn
 {
   namespace Models
   {
-    class LinearLogisticRegression{
+    class LinearLogisticRegression {
     public:
       static const ProblemType ModelType = ProblemType::Classification;
       static constexpr const char* ModelName="LinearLogisticRegression";

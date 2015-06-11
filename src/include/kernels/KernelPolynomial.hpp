@@ -1,7 +1,7 @@
 #ifndef KERNEL_POLYNOMIAL
 #define KERNEL_POLYNOMIAL
 
-#include <core/Definitions.hpp>
+#include "../core/Definitions.hpp"
 
 namespace CPPLearn{
   namespace Kernels{

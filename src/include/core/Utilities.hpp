@@ -2,7 +2,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-#include "Definitions.hpp"
+#include "./Definitions.hpp"
 #include <Eigen/Eigenvalues>
 #include <sys/stat.h>
 
@@ -379,6 +379,31 @@ namespace CPPLearn
 
       double loss=(predictedLabelData-testLabelData).squaredNorm();
       return loss;
+    }
+
+    template<typename FirstIteratorType, typename SecondIteratorType>
+    void
+    sortTwoArray(const FirstIteratorType firstStart, const FirstIteratorType firstEnd,
+                 const SecondIteratorType secondStart)
+    {
+      using FirstType = typename std::iterator_traits<FirstIteratorType>::value_type;
+      using SecondType = typename std::iterator_traits<SecondIteratorType>::value_type;
+
+      const long range=firstEnd-firstStart;
+      vector<long> orderedIndices(range);
+      std::iota(std::begin(orderedIndices), std::end(orderedIndices), 0);
+      std::stable_sort(std::begin(orderedIndices), std::end(orderedIndices),
+                       [&firstStart](auto i, auto j){return *(firstStart+i) < *(firstStart+j);});
+
+      vector<FirstType> sortedDataVector(range);
+      vector<SecondType> sortedIndicesVector(range);
+
+      for (long id=0; id<range; ++id)
+        sortedDataVector[id] = *(firstStart+orderedIndices[id]);
+      for (long id=0; id<range; ++id)
+        sortedIndicesVector[id] = *(secondStart+orderedIndices[id]);
+      std::move(sortedDataVector.begin(), sortedDataVector.end(), firstStart);
+      std::move(sortedIndicesVector.begin(), sortedIndicesVector.end(), secondStart);
     }
   }
 }

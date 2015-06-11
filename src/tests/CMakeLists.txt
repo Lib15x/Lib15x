@@ -7,3 +7,4 @@ endmacro (add_test_by_fail_regex)
 
 add_test_by_fail_regex(LibSVM_unit "test failed" "")
 add_test_by_fail_regex(Scaler_unit "test failed" "")
+add_test_by_fail_regex(TreeClassifier_unit "test failed" "")

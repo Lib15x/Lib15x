@@ -1,6 +1,6 @@
 #ifndef KERNEL_SIGMOID
 #define KERNEL_SIGMOID
-#include <core/Definitions.hpp>
+#include "../core/Definitions.hpp"
 
 namespace CPPLearn{
   namespace Kernels{

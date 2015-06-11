@@ -1,7 +1,7 @@
 #ifndef KERNEL_RBF
 #define KERNEL_RBF
 
-#include <core/Definitions.hpp>
+#include "../core/Definitions.hpp"
 
 namespace CPPLearn{
   namespace Kernels{
