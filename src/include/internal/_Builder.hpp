@@ -127,7 +127,6 @@ namespace CPPLearn{
         recordQueue.pop();
 
         bool isLeaf = (record._isLeaf || numberOfInnerNodes <= 0);
-
         if (record._nodeDepth > maxDepthSoFar)
           maxDepthSoFar = record._nodeDepth;
 
@@ -139,7 +138,6 @@ namespace CPPLearn{
           _splitAndAddNode(tree, record._startIndex, record._splitSampleIndex,
                            record._impurityLeft, true, record._thisNodeIndex,
                            record._nodeDepth + 1);
-
         _PriorityQueueRecord rightRecord =
           _splitAndAddNode(tree, record._splitSampleIndex, record._endIndex,
                            record._impurityRight, false, record._thisNodeIndex,

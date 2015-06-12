@@ -5,8 +5,48 @@
 
 namespace CPPLearn {
 
+  double bernoulliRule(const vector<long>& labelsCount) {
+    const long numberOfSamples =
+      std::accumulate(std::begin(labelsCount), std::end(labelsCount), 0);
+
+    double impurity = 1.0;
+    for (auto thisLabelCount : labelsCount)
+      impurity *= static_cast<double>(thisLabelCount)/static_cast<double>(numberOfSamples);
+
+    return impurity;
+  }
+
+  double giniRule(const vector<long>& labelsCount) {
+    const long numberOfSamples =
+      std::accumulate(std::begin(labelsCount), std::end(labelsCount), 0);
+
+    double impurity = 1.0;
+    for (auto thisLabelCount : labelsCount) {
+      double temp = static_cast<double>(thisLabelCount)/static_cast<double>(numberOfSamples);
+      impurity -= temp*temp;
+    }
+
+    return impurity;
+  }
+
+  double entropyRule(const vector<long>& labelsCount) {
+    const long numberOfSamples =
+      std::accumulate(std::begin(labelsCount), std::end(labelsCount), 0);
+
+    double impurity = 0.0;
+    for (auto thisLabelCount : labelsCount)
+      if (thisLabelCount > 0){
+        double temp = static_cast<double>(thisLabelCount)/static_cast<double>(numberOfSamples);
+        impurity -= temp*log(temp);
+      }
+
+    return impurity;
+  }
+
   class _Criterion {
   public:
+    static constexpr double (*ImpurityRule)(const vector<long>&)= entropyRule;
+
     explicit _Criterion(const long numberOfClasses) : _labelData{nullptr}, _sampleIndices{nullptr},
       _numberOfSamplesInThisNode{0}, _startIndex{-1}, _endIndex{-1}, _currentPosition{-1},
       _numberOfClasses{numberOfClasses}, _labelsCountTotal(numberOfClasses,0),
@@ -61,27 +101,15 @@ namespace CPPLearn {
 
     double
     calculateNodeImpurity() const {
-      double entropy = 1.0;
-      for (long classId=0; classId<_numberOfClasses; ++classId) {
-        double fraction = static_cast<double>(_labelsCountTotal[classId])/
-          static_cast<double>(_numberOfSamplesInThisNode);
-        entropy *= fraction;
-      }
-      return entropy*static_cast<double> (_numberOfSamplesInThisNode);
+      return ImpurityRule(_labelsCountTotal);
     }
 
     void
     calculateChildrenImpurity(double* impurityLeft,
                               double* impurityRight) const
     {
-      *impurityLeft=1.0;
-      *impurityRight=1.0;
-      for (long classId=0; classId < _numberOfClasses; ++classId) {
-        *impurityLeft *= static_cast<double>(_labelsCountLeft[classId]);
-        *impurityRight *= static_cast<double>(_labelsCountRight[classId]);
-      }
-      *impurityLeft/=static_cast<double>(_numberOfSamplesOnLeft);
-      *impurityRight/=static_cast<double>(_numberOfSamplesOnRight);
+      *impurityLeft = ImpurityRule(_labelsCountLeft);
+      *impurityRight = ImpurityRule(_labelsCountRight);
     }
 
     const vector<long>&
@@ -97,6 +125,7 @@ namespace CPPLearn {
       double impurityRight = 0;
       long numberOfData=_labelData->size();
       calculateChildrenImpurity(&impurityLeft, &impurityRight);
+
       double weightTotal = static_cast<double>(_numberOfSamplesInThisNode)/
         static_cast<double>(numberOfData);
       double weightLeft = static_cast<double>(_numberOfSamplesOnLeft)/
