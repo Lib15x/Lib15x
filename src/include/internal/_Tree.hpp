@@ -14,7 +14,7 @@ namespace CPPLearn {
       bool _isLeaf;
 
       _Node () : _leftChildIndex{-1}, _rightChildIndex{-1},
-        _featureIndex{-1}, _threshold{0.}, _isLeaf{false} { }
+        _featureIndex{-1}, _threshold{-std::numeric_limits<double>::max()}, _isLeaf{false} { }
 
       _Node (const long featureIndex, const double threshold) :
         _leftChildIndex{-1}, _rightChildIndex{-1},

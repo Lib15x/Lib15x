@@ -38,10 +38,10 @@ namespace CPPLearn {
       _criterion.init(_labelData, &_sampleIndices, _startIndex, _endIndex);
     }
 
-    SplitRecord
+    _SplitRecord
     splitNode(const double impurity,  long* numberOfConstantFeatures)
     {
-      SplitRecord bestSplit, currentSplit;
+      _SplitRecord bestSplit, currentSplit;
       bestSplit._splitSampleIndex=_endIndex;
       long featIdI = _numberOfFeatures;
       long totalNumberOfConstantFeatures = *numberOfConstantFeatures;

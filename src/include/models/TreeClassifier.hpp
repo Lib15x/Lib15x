@@ -19,10 +19,10 @@ namespace CPPLearn
 
       TreeClassifier(const long numberOfFeatures, const long numberOfClasses,
                      const long minSamplesInALeaf, const long minSamplesInANode,
-                     const long maxDepth) :
+                     const long maxDepth, const long maxNumberOfLeafNodes=100) :
         _numberOfFeatures{numberOfFeatures}, _numberOfClasses{numberOfClasses},
         _minSamplesInALeaf{minSamplesInALeaf}, _minSamplesInANode{minSamplesInANode},
-        _maxDepth{maxDepth} { }
+        _maxDepth{maxDepth}, _maxNumberOfLeafNodes{maxNumberOfLeafNodes} { }
 
       void train(const MatrixXd& trainData, const Labels& trainLabels)
       {
@@ -85,12 +85,13 @@ namespace CPPLearn
 
         _Criterion criterion{_numberOfClasses};
         _Splitter splitter{criterion};
-        _DepthFirstBuilder depthFirstBuilder(_minSamplesInALeaf,
-                                             _minSamplesInANode,
-                                             _maxDepth, splitter);
+        _BestFirstBuilder bestFirstBuilder(_minSamplesInALeaf,
+                                           _minSamplesInANode,
+                                           _maxDepth, _maxNumberOfLeafNodes,
+                                           splitter);
 
         try {
-          depthFirstBuilder.build(trainData, labelData, &_tree);
+          bestFirstBuilder.build(trainData, labelData, &_tree);
         }
         catch (...) {
           cout<<"exception caught when training tree classifier: "<<endl;
@@ -163,6 +164,7 @@ namespace CPPLearn
       const long _minSamplesInALeaf;
       const long _minSamplesInANode;
       const long _maxDepth;
+      const long _maxNumberOfLeafNodes;
       bool _modelTrained=false;
       VerboseFlag _verbose = VerboseFlag::Quiet;
       _Tree _tree;
