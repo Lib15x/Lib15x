@@ -7,7 +7,7 @@ using namespace CPPLearn;
 int main(int argc, char* argv[])
 {
   ignoreUnusedVariables(argc, argv);
-  using LearningModel=Models::TreeClassifier;
+  using LearningModel=Models::TreeClassifier<entropyRule>;
 
   MatrixXd trainData(7,2);
   trainData<<14,0,
@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
   labels._labelData<<1,1,1,0,0,1,0;
   const long numberOfClasses=2;
 
-  LearningModel learningModel{numberOfFeatures, numberOfClasses, 1, 1, 10};
+  LearningModel learningModel{numberOfFeatures, numberOfClasses, 1, 1, 10, 10};
   learningModel.train(trainData, labels);
   Labels predictedLabels=learningModel.predict(trainData);
   cout<<predictedLabels._labelData<<endl;

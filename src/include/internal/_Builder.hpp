@@ -8,18 +8,36 @@
 
 namespace CPPLearn{
 
-  class _DepthFirstBuilder {
+  class _BuilderBase{
   public:
-    _DepthFirstBuilder(long minSamplesInALeaf, long minSamplesInANode,
-                       long maxDepthAllowed, _Splitter splitter) :
-      _minSamplesInANode{minSamplesInANode}, _minSamplesInALeaf{minSamplesInALeaf},
-      _maxDepthAllowed{maxDepthAllowed}, _splitter{splitter} { }
-
     void
     build(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree)
     {
+      _doBuild(trainData, labelData, tree);
+    }
+
+  private:
+    virtual void
+    _doBuild(const MatrixXd& trainData, const VectorXd& labelData,
+             _Tree* tree) = 0;
+  };
+
+  template<class _Criterion>
+  class _DepthFirstBuilder : public _BuilderBase {
+  public:
+    using Splitter = _Splitter<_Criterion>;
+
+    _DepthFirstBuilder(long minSamplesInALeaf, long minSamplesInANode,
+                       long maxDepthAllowed, _Criterion* criterion) :
+      _minSamplesInANode{minSamplesInANode}, _minSamplesInALeaf{minSamplesInALeaf},
+      _maxDepthAllowed{maxDepthAllowed}, _criterion{criterion} { }
+
+  private:
+    void
+    _doBuild(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree)
+    {
       const long numberOfData = trainData.rows();
-      _splitter.init(&trainData, &labelData);
+      Splitter splitter(&trainData, &labelData, _criterion, _minSamplesInALeaf);
       std::stack<_StackRecord> recordStack;
       long maxDepthSoFar = -1;
       recordStack.emplace(0, numberOfData, 0, false, std::numeric_limits<double>::max(),
@@ -38,19 +56,19 @@ namespace CPPLearn{
         long numberOfConstantFeatures = stackRecord._numberOfConstantFeatures;
         const long numberOfSamplesInThisNode = endIndex - startIndex;
 
-        _splitter.resetToThisNode(startIndex, endIndex);
+        splitter.resetToThisNode(startIndex, endIndex);
 
         bool isLeaf = (nodeDepth >= _maxDepthAllowed) ||
           (numberOfSamplesInThisNode < _minSamplesInANode) ||
           (numberOfSamplesInThisNode < 2 * _minSamplesInALeaf);
 
-        if (parentNodeIndex<0) impurity = _splitter.calculateNodeImpurity();
+        if (parentNodeIndex<0) impurity = splitter.calculateNodeImpurity();
 
         isLeaf = isLeaf || (impurity <= _minImpurity);
 
         _SplitRecord splitRecord;
         if (!isLeaf) {
-          splitRecord = _splitter.splitNode(impurity, &numberOfConstantFeatures);
+          splitRecord = splitter.splitNode(impurity, &numberOfConstantFeatures);
           isLeaf = isLeaf || (splitRecord._splitSampleIndex >= endIndex);
         }
 
@@ -59,7 +77,7 @@ namespace CPPLearn{
                                                     splitRecord._threshold);
 
         if (isLeaf) {
-          vector<long> labelsCountOfThisNode=_splitter.nodeLabelsCount();
+          vector<long> labelsCountOfThisNode = splitter.nodeLabelsCount();
           tree->addLeaf(currentNodeIndex, std::move(labelsCountOfThisNode));
         }
         else {
@@ -82,21 +100,26 @@ namespace CPPLearn{
     const long _minSamplesInANode;
     const long _minSamplesInALeaf;
     const long _maxDepthAllowed;
-    _Splitter _splitter;
+    _Criterion* _criterion;
+    //_Splitter _splitter;
     const double _minImpurity=1e-7;
   };
 
-  class _BestFirstBuilder {
+  template<class _Criterion>
+  class _BestFirstBuilder : public _BuilderBase {
   public:
+    using Splitter= _Splitter<_Criterion>;
+
     _BestFirstBuilder(const long minSamplesInALeaf, const long minSamplesInANode,
                       const long maxDepthAllowed, const long maxNumberOfLeafNodes,
-                      const _Splitter splitter) :
+                      _Criterion* criterion) :
       _minSamplesInANode{minSamplesInANode}, _minSamplesInALeaf{minSamplesInALeaf},
       _maxDepthAllowed{maxDepthAllowed}, _maxNumberOfLeafNodes{maxNumberOfLeafNodes},
-      _splitter{splitter} { }
+      _criterion{criterion} { }
 
+  private:
     void
-    build(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree)
+    _doBuild(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree)
     {
       auto compareRecord =
         [](const _PriorityQueueRecord& a, const _PriorityQueueRecord& b)
@@ -107,18 +130,18 @@ namespace CPPLearn{
 
       const long numberOfData = trainData.rows();
 
-      _splitter.init(&trainData, &labelData);
-      _splitter.resetToThisNode(0, numberOfData);
+      Splitter splitter(&trainData, &labelData, _criterion, _minSamplesInALeaf);
+      splitter.resetToThisNode(0, numberOfData);
 
       PriorityQueue recordQueue(compareRecord);
 
       long numberOfInnerNodes = _maxNumberOfLeafNodes - 1;
       long maxDepthSoFar = -1;
 
-      double impurity = _splitter.calculateNodeImpurity();
+      double impurity = splitter.calculateNodeImpurity();
 
       _PriorityQueueRecord record =
-        _splitAndAddNode(tree, 0, numberOfData, impurity, true, -1, 0);
+        _splitAndAddNode(tree, &splitter,  0, numberOfData, impurity, true, -1, 0);
 
       recordQueue.emplace(record);
 
@@ -135,11 +158,11 @@ namespace CPPLearn{
         --numberOfInnerNodes;
 
         _PriorityQueueRecord leftRecord =
-          _splitAndAddNode(tree, record._startIndex, record._splitSampleIndex,
+          _splitAndAddNode(tree, &splitter, record._startIndex, record._splitSampleIndex,
                            record._impurityLeft, true, record._thisNodeIndex,
                            record._nodeDepth + 1);
         _PriorityQueueRecord rightRecord =
-          _splitAndAddNode(tree, record._splitSampleIndex, record._endIndex,
+          _splitAndAddNode(tree, &splitter, record._splitSampleIndex, record._endIndex,
                            record._impurityRight, false, record._thisNodeIndex,
                            record._nodeDepth + 1);
 
@@ -150,24 +173,15 @@ namespace CPPLearn{
       tree->_maxDepthOfThisTree = maxDepthSoFar;
     }
 
-  private:
-    const long _minSamplesInANode;
-    const long _minSamplesInALeaf;
-    const long _maxDepthAllowed;
-    const long _maxNumberOfLeafNodes;
-    _Splitter _splitter;
-    const double _minImpurity=1e-7;
-
-  private:
     _PriorityQueueRecord
-    _splitAndAddNode(_Tree* tree,
+    _splitAndAddNode(_Tree* tree, Splitter* splitter,
                      const long startIndex, const long endIndex,
                      const double impurity, const bool isLeft, const long parentNodeIndex,
                      const long nodeDepth)
     {
       long numberOfConstantFeatures = 0;
 
-      _splitter.resetToThisNode(startIndex, endIndex);
+      splitter->resetToThisNode(startIndex, endIndex);
 
       long numberOfSamplesInThisNode = endIndex - startIndex;
       bool isLeaf = (nodeDepth > _maxDepthAllowed) ||
@@ -178,7 +192,7 @@ namespace CPPLearn{
       _SplitRecord splitRecord;
 
       if (!isLeaf) {
-        splitRecord = _splitter.splitNode(impurity, &numberOfConstantFeatures);
+        splitRecord = splitter->splitNode(impurity, &numberOfConstantFeatures);
         isLeaf = isLeaf || (splitRecord._splitSampleIndex >= endIndex);
       }
 
@@ -187,7 +201,7 @@ namespace CPPLearn{
                                                   splitRecord._threshold);
 
       if (isLeaf) {
-        vector<long> labelsCountOfThisNode=_splitter.nodeLabelsCount();
+        vector<long> labelsCountOfThisNode=splitter->nodeLabelsCount();
         tree->addLeaf(currentNodeIndex, std::move(labelsCountOfThisNode));
       }
 
@@ -199,6 +213,15 @@ namespace CPPLearn{
 
       return record;
     }
+
+  private:
+    const long _minSamplesInANode;
+    const long _minSamplesInALeaf;
+    const long _maxDepthAllowed;
+    const long _maxNumberOfLeafNodes;
+    _Criterion* _criterion;
+    //_Splitter _splitter;
+    const double _minImpurity=1e-7;
   };
 }
 #endif // _BUILDER

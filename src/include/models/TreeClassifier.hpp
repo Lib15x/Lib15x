@@ -10,6 +10,7 @@ namespace CPPLearn
 {
   namespace Models
   {
+    template<double (*ImpurityRule)(const vector<long>&)>
     class TreeClassifier {
     public:
       static const ProblemType ModelType = ProblemType::Classification;
@@ -17,9 +18,11 @@ namespace CPPLearn
       static constexpr double (*LossFunction)(const Labels&, const Labels&)=
         Utilities::classificationZeroOneLossFunction;
 
+      using Criterion = _Criterion<ImpurityRule>;
+
       TreeClassifier(const long numberOfFeatures, const long numberOfClasses,
                      const long minSamplesInALeaf, const long minSamplesInANode,
-                     const long maxDepth, const long maxNumberOfLeafNodes=100) :
+                     const long maxDepth, const long maxNumberOfLeafNodes=-1) :
         _numberOfFeatures{numberOfFeatures}, _numberOfClasses{numberOfClasses},
         _minSamplesInALeaf{minSamplesInALeaf}, _minSamplesInANode{minSamplesInANode},
         _maxDepth{maxDepth}, _maxNumberOfLeafNodes{maxNumberOfLeafNodes} { }
@@ -83,15 +86,24 @@ namespace CPPLearn
         _tree._numberOfClasses = _numberOfClasses;
         _tree._numberOfFeatures = _numberOfFeatures;
 
-        _Criterion criterion{_numberOfClasses};
-        _Splitter splitter{criterion};
-        _BestFirstBuilder bestFirstBuilder(_minSamplesInALeaf,
-                                           _minSamplesInANode,
-                                           _maxDepth, _maxNumberOfLeafNodes,
-                                           splitter);
+        Criterion criterion{_numberOfClasses};
+        //Splitter splitter{criterion};
+
+        std::unique_ptr<_BuilderBase> builder=nullptr;
+        if (_maxNumberOfLeafNodes < 0)
+          builder=std::make_unique<_DepthFirstBuilder<Criterion> >(_minSamplesInALeaf,
+                                                                  _minSamplesInANode,
+                                                                  _maxDepth,
+                                                                  &criterion);
+        else
+          builder=std::make_unique<_BestFirstBuilder<Criterion> >(_minSamplesInALeaf,
+                                                                 _minSamplesInANode,
+                                                                 _maxDepth,
+                                                                 _maxNumberOfLeafNodes,
+                                                                 &criterion);
 
         try {
-          bestFirstBuilder.build(trainData, labelData, &_tree);
+          builder->build(trainData, labelData, &_tree);
         }
         catch (...) {
           cout<<"exception caught when training tree classifier: "<<endl;

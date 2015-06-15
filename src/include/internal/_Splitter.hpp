@@ -6,28 +6,19 @@
 #include "./_Criterion.hpp"
 
 namespace CPPLearn {
+  template<class _Criterion>
   class _Splitter {
   public:
-    _Splitter(_Criterion criterion, long minSamplesInALeaf=1) :
+    _Splitter(const MatrixXd* trainData, const VectorXd* labelData,
+              _Criterion* criterion, long minSamplesInALeaf=1) :
+      _trainData{trainData}, _labelData{labelData},
       _criterion{criterion}, _minSamplesInALeaf{minSamplesInALeaf},
-      _totalNumberOfSamples{0}, _numberOfFeatures{0},
-      _startIndex{-1}, _endIndex{-1},
-      _trainData{nullptr}, _labelData{nullptr} { }
-
-    void
-    init(const MatrixXd* trainData, const VectorXd* labelData)
+      _totalNumberOfSamples{_trainData->rows()}, _numberOfFeatures{_trainData->cols()},
+      _sampleIndices(_totalNumberOfSamples), _featureIndices(_numberOfFeatures),
+      _startIndex{-1}, _endIndex{-1}
     {
-      _totalNumberOfSamples = trainData->rows();
-
-      _sampleIndices = vector<long>(_totalNumberOfSamples);
       std::iota(std::begin(_sampleIndices), std::end(_sampleIndices),0);
-
-      _numberOfFeatures = trainData->cols();
-      _featureIndices = vector<long>(_numberOfFeatures);
       std::iota(std::begin(_featureIndices), std::end(_featureIndices),0);
-
-      _labelData = labelData;
-      _trainData = trainData;
     }
 
     void
@@ -35,7 +26,7 @@ namespace CPPLearn {
     {
       _startIndex = startIndex;
       _endIndex = endIndex;
-      _criterion.init(_labelData, &_sampleIndices, _startIndex, _endIndex);
+      _criterion->init(_labelData, &_sampleIndices, _startIndex, _endIndex);
     }
 
     _SplitRecord
@@ -73,7 +64,7 @@ namespace CPPLearn {
         --featIdI;
         std::swap(_featureIndices[featIdI], _featureIndices[featIdJ]);
 
-        _criterion.reset();
+        _criterion->reset();
         for (long sampleId=_startIndex; sampleId<_endIndex;) {
           if (sampleId+1<_endIndex)
             while (dataBuffer[sampleId + 1-_startIndex] <=
@@ -90,15 +81,15 @@ namespace CPPLearn {
               ((_endIndex - currentSplit._splitSampleIndex) < _minSamplesInALeaf))
             continue;
 
-          _criterion.update(currentSplit._splitSampleIndex);
+          _criterion->update(currentSplit._splitSampleIndex);
           double left = 0;
           double right = 0;
 
-          _criterion.calculateChildrenImpurity(&left, &right);
-          currentSplit._impurityImprovement = _criterion.impurityImprove(impurity);
+          _criterion->calculateChildrenImpurity(&left, &right);
+          currentSplit._impurityImprovement = _criterion->impurityImprove(impurity);
 
           if (currentSplit._impurityImprovement > bestSplit._impurityImprovement) {
-            _criterion.calculateChildrenImpurity(&currentSplit._impurityLeft,
+            _criterion->calculateChildrenImpurity(&currentSplit._impurityLeft,
                                                  &currentSplit._impurityRight);
             currentSplit._threshold = (dataBuffer[sampleId - 1-_startIndex] +
                                        dataBuffer[sampleId-_startIndex]) / 2.0;
@@ -127,25 +118,25 @@ namespace CPPLearn {
 
     const vector<long>&
     nodeLabelsCount() const {
-      return _criterion.nodeLabelsCount();
+      return _criterion->nodeLabelsCount();
     }
 
     double
     calculateNodeImpurity() {
-      return _criterion.calculateNodeImpurity();
+      return _criterion->calculateNodeImpurity();
     }
 
   private:
-    _Criterion _criterion;
-    const long _minSamplesInALeaf;
-    vector<long> _sampleIndices;
-    long _totalNumberOfSamples;
-    vector<long> _featureIndices;
-    long _numberOfFeatures;
-    long _startIndex;
-    long _endIndex;
     const MatrixXd* _trainData;
     const VectorXd* _labelData;
+    _Criterion* _criterion;
+    const long _minSamplesInALeaf;
+    const long _totalNumberOfSamples;
+    const long _numberOfFeatures;
+    vector<long> _sampleIndices;
+    vector<long> _featureIndices;
+    long _startIndex;
+    long _endIndex;
     const double _featureThreshold=1e-7;
   };
 }
