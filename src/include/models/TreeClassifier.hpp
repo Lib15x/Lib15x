@@ -21,11 +21,28 @@ namespace CPPLearn
       using Criterion = _Criterion<ImpurityRule>;
 
       TreeClassifier(const long numberOfFeatures, const long numberOfClasses,
-                     const long minSamplesInALeaf, const long minSamplesInANode,
-                     const long maxDepth, const long maxNumberOfLeafNodes=-1) :
+                     const long minSamplesInALeaf=1, const long minSamplesInANode=1,
+                     const long maxDepth=std::numeric_limits<long>::max(),
+                     const long maxNumberOfLeafNodes=-1) :
         _numberOfFeatures{numberOfFeatures}, _numberOfClasses{numberOfClasses},
         _minSamplesInALeaf{minSamplesInALeaf}, _minSamplesInANode{minSamplesInANode},
-        _maxDepth{maxDepth}, _maxNumberOfLeafNodes{maxNumberOfLeafNodes} { }
+        _maxDepth{maxDepth}, _maxNumberOfLeafNodes{maxNumberOfLeafNodes}
+      {
+        if (_minSamplesInALeaf <= 0 ||
+            _minSamplesInANode <= 0 ||
+            _maxDepth <= 0 ||
+            _maxNumberOfLeafNodes == 0 || _maxNumberOfLeafNodes<-1 ) {
+          throwException("Error happen when constructing %s, "
+                         "user input regularization parameter cannot be smaller than 1: "
+                         "numberOfSamplesInAleaf = : (%ld); "
+                         "minSamplesInANode = : (%ld); "
+                         "maxDepth = : (%ld); "
+                         "maxNumberOfLeafNodes = : (%ld); ",
+                         ModelName, _minSamplesInALeaf, _minSamplesInANode,
+                         _maxDepth, _maxNumberOfLeafNodes);
+        }
+
+      }
 
       void train(const MatrixXd& trainData, const Labels& trainLabels)
       {
@@ -92,15 +109,15 @@ namespace CPPLearn
         std::unique_ptr<_BuilderBase> builder=nullptr;
         if (_maxNumberOfLeafNodes < 0)
           builder=std::make_unique<_DepthFirstBuilder<Criterion> >(_minSamplesInALeaf,
-                                                                  _minSamplesInANode,
-                                                                  _maxDepth,
-                                                                  &criterion);
+                                                                   _minSamplesInANode,
+                                                                   _maxDepth,
+                                                                   &criterion);
         else
           builder=std::make_unique<_BestFirstBuilder<Criterion> >(_minSamplesInALeaf,
-                                                                 _minSamplesInANode,
-                                                                 _maxDepth,
-                                                                 _maxNumberOfLeafNodes,
-                                                                 &criterion);
+                                                                  _minSamplesInANode,
+                                                                  _maxDepth,
+                                                                  _maxNumberOfLeafNodes,
+                                                                  &criterion);
 
         try {
           builder->build(trainData, labelData, &_tree);
