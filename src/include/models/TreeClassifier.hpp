@@ -10,7 +10,7 @@ namespace CPPLearn
 {
   namespace Models
   {
-    template<double (*ImpurityRule)(const vector<long>&)>
+    template<double (*ImpurityRule)(const vector<long>&) = giniRule>
     class TreeClassifier {
     public:
       static const ProblemType ModelType = ProblemType::Classification;

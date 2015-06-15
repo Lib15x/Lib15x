@@ -7,7 +7,7 @@ using namespace CPPLearn;
 int main(int argc, char* argv[])
 {
   ignoreUnusedVariables(argc, argv);
-  using LearningModel=Models::TreeClassifier<entropyRule>;
+  using LearningModel=Models::TreeClassifier<>;
 
   MatrixXd trainData(7,2);
   trainData<<14,0,

@@ -7,7 +7,7 @@ using namespace CPPLearn;
 
 TEST(TreeClassifier, test0)
 {
-  using LearningModel=Models::TreeClassifier;
+  using LearningModel=Models::TreeClassifier<>;
   MatrixXd trainData(7,2);
   trainData<<14,0,
     10,1,
