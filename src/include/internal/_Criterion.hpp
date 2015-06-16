@@ -6,7 +6,7 @@
 namespace CPPLearn {
 
   double
-  bernoulliRule(const vector<long>& labelsCount) {
+  bernoulli(const vector<long>& labelsCount) {
     const long numberOfSamples =
       std::accumulate(std::begin(labelsCount), std::end(labelsCount), 0);
 
@@ -18,7 +18,7 @@ namespace CPPLearn {
   }
 
   double
-  giniRule(const vector<long>& labelsCount) {
+  gini(const vector<long>& labelsCount) {
     const long numberOfSamples =
       std::accumulate(std::begin(labelsCount), std::end(labelsCount), 0);
 
@@ -32,7 +32,7 @@ namespace CPPLearn {
   }
 
   double
-  entropyRule(const vector<long>& labelsCount) {
+  entropy(const vector<long>& labelsCount) {
     const long numberOfSamples =
       std::accumulate(std::begin(labelsCount), std::end(labelsCount), 0);
 
@@ -49,8 +49,6 @@ namespace CPPLearn {
   template<double (*ImpurityRule)(const vector<long>&)>
   class _Criterion {
   public:
-    //static constexpr double (*ImpurityRule)(const vector<long>&)= entropyRule;
-
     explicit _Criterion(const long numberOfClasses) : _labelData{nullptr}, _sampleIndices{nullptr},
       _numberOfSamplesInThisNode{0}, _startIndex{-1}, _endIndex{-1}, _currentPosition{-1},
       _numberOfClasses{numberOfClasses}, _labelsCountTotal(numberOfClasses,0),

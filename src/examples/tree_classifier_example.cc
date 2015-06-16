@@ -3,33 +3,27 @@
 #include <models/TreeClassifier.hpp>
 
 using namespace CPPLearn;
+using LearningModel=Models::TreeClassifier<>;
 
 int main(int argc, char* argv[])
 {
   ignoreUnusedVariables(argc, argv);
-  using LearningModel=Models::TreeClassifier<>;
+  constexpr double (*LossFunction)(const Labels&, const Labels&)=LearningModel::LossFunction;
+  const string trainfilename="../../example/data/iris.cl";
 
-  MatrixXd trainData(7,2);
-  trainData<<14,0,
-    10,1,
-    13,0,
-    8,1,
-    11,0,
-    9,1,
-    10,0;
+  const std::pair<MatrixXd, Labels> trainPair= Utilities::readCPPLearnDataFile(trainfilename);
+  const MatrixXd& trainData=trainPair.first;
+  const Labels& trainLabels=trainPair.second;
 
   const long numberOfFeatures=trainData.cols();
-  const long numberOfData=trainData.rows();
+  const long numberOfClasses = static_cast<long>(trainLabels._labelData.maxCoeff())+1;
 
-  Labels labels{ProblemType::Classification};
-  labels._labelData.resize(numberOfData);
-  labels._labelData<<1,1,1,0,0,1,0;
-  const long numberOfClasses=2;
-
-  LearningModel learningModel{numberOfFeatures, numberOfClasses, 1, 1, 10, 10};
-  learningModel.train(trainData, labels);
+  LearningModel learningModel{numberOfFeatures, numberOfClasses};
+  learningModel.train(trainData, trainLabels);
   Labels predictedLabels=learningModel.predict(trainData);
-  cout<<predictedLabels._labelData<<endl;
+
+  double loss=LossFunction(predictedLabels, trainLabels);
+  cout<<"classification error on training set = "<<loss<<endl;
 
   return 0;
 }

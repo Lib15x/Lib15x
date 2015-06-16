@@ -10,7 +10,7 @@ namespace CPPLearn
 {
   namespace Models
   {
-    template<double (*ImpurityRule)(const vector<long>&) = giniRule>
+    template<double (*ImpurityRule)(const vector<long>&) = gini>
     class TreeClassifier {
     public:
       static const ProblemType ModelType = ProblemType::Classification;
@@ -41,10 +41,10 @@ namespace CPPLearn
                          ModelName, _minSamplesInALeaf, _minSamplesInANode,
                          _maxDepth, _maxNumberOfLeafNodes);
         }
-
       }
 
-      void train(const MatrixXd& trainData, const Labels& trainLabels)
+      void
+      train(const MatrixXd& trainData, const Labels& trainLabels)
       {
         if (trainLabels._labelType != ProblemType::Classification){
           throwException("Error happen when training %s model: "
@@ -104,7 +104,6 @@ namespace CPPLearn
         _tree._numberOfFeatures = _numberOfFeatures;
 
         Criterion criterion{_numberOfClasses};
-        //Splitter splitter{criterion};
 
         std::unique_ptr<_BuilderBase> builder=nullptr;
         if (_maxNumberOfLeafNodes < 0)
@@ -130,7 +129,8 @@ namespace CPPLearn
         _modelTrained=true;
       }
 
-      Labels predict(const MatrixXd& testData) const
+      Labels
+      predict(const MatrixXd& testData) const
       {
         if (!_modelTrained){
           throwException("Error happen when predicting with %s model: "
@@ -157,7 +157,8 @@ namespace CPPLearn
         return predictedLabels;
       }
 
-      double predictOne(const VectorXd& instance) const
+      double
+      predictOne(const VectorXd& instance) const
       {
         vector<long> labelsCount= _tree.predictOne(instance);
         assert(static_cast<long>(labelsCount.size())==_numberOfClasses);
@@ -168,7 +169,8 @@ namespace CPPLearn
         return static_cast<double>(label);
       }
 
-      const long& getNumberOfFeatures() const
+      const long&
+      getNumberOfFeatures() const
       {
         return _numberOfFeatures;
       }
@@ -176,13 +178,15 @@ namespace CPPLearn
       /**
        * Clear the model.
        */
-      void clear()
+      void
+      clear()
       {
         _tree.reset();
         _modelTrained=false;
       }
 
-      VerboseFlag& whetherVerbose()
+      VerboseFlag&
+      whetherVerbose()
       {
         return _verbose;
       }

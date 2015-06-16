@@ -163,7 +163,8 @@ namespace CPPLearn
     }
 
 
-    void createCPPLearnDataFileFromLibsvmFormat(const string& libsvmFormatFileName,
+    void
+    createCPPLearnDataFileFromLibsvmFormat(const string& libsvmFormatFileName,
                                                 const string& cpplearnFileName,
                                                 const VerboseFlag verboseFlag=VerboseFlag::Quiet)
     {

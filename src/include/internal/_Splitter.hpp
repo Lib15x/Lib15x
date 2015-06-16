@@ -112,6 +112,7 @@ namespace CPPLearn {
           std::swap(_sampleIndices[partitionEnd], _sampleIndices[sampleId]);
         }
       }
+
       *numberOfConstantFeatures = totalNumberOfConstantFeatures;
       return bestSplit;
     }
