@@ -13,8 +13,37 @@ namespace CPPLearn
     public:
       static const ProblemType ModelType = ProblemType::Regression;
       static constexpr const char* ModelName=DerivedRegressor::ModelName;
-      static constexpr double (*LossFunction)(const Labels&, const Labels&)=
-        Utilities::regressionSquaredNormLossFunction;
+      static double
+      LossFunction(const Labels& predictedLabels, const Labels& testLabels)
+      {
+        if (predictedLabels._labelType != ProblemType::Regression ||
+            testLabels._labelType != ProblemType::Regression){
+          throwException("Error happen when computing regression loss: "
+                         "Input labelType must be Regression!\n");
+        }
+
+        const VectorXd& predictedLabelData=predictedLabels._labelData;
+        const VectorXd& testLabelData=testLabels._labelData;
+
+        if (predictedLabelData.size() != testLabelData.size()){
+          throwException("Error happen when computing regression loss: "
+                         "The inpute two labels have different sizes. "
+                         "sizes of the predicted labels: (%ld); "
+                         "sizes of the test labels: (%ld).\n",
+                         predictedLabelData.size(), testLabelData.size());
+        }
+
+        const long numberOfData = testLabelData.size();
+        double loss=0.0;
+        for (long dataId = 0; dataId<numberOfData; ++dataId)
+          if (predictedLabelData(dataId) != std::numeric_limits<double>::max() &&
+              testLabelData(dataId) != std::numeric_limits<double>::max()) {
+            double diff = predictedLabelData(dataId) - testLabelData(dataId);
+            loss+=diff*diff;
+          }
+
+        return loss;
+      }
 
       explicit _BaseRegressor(const long numberOfFeatures) :
         _numberOfFeatures{numberOfFeatures} { }
@@ -47,7 +76,7 @@ namespace CPPLearn
         vector<long> indicesForAllTrainData(trainData.rows());
         std::iota(std::begin(indicesForAllTrainData), std::end(indicesForAllTrainData), 0);
         static_cast<DerivedRegressor*>(this)->train(trainData, trainLabels,
-                                                     std::move(indicesForAllTrainData));
+                                                    std::move(indicesForAllTrainData));
       }
 
       Labels
@@ -80,7 +109,7 @@ namespace CPPLearn
         assert(_modelTrained);
         Labels predictedLabels{ProblemType::Regression};
         predictedLabels._labelData.resize(testData.rows());
-        predictedLabels._labelData.fill(-1.0);
+        predictedLabels._labelData.fill(std::numeric_limits<double>::max());
 
         for (auto testDataId : testIndices){
           Map<const VectorXd> instance(&testData(testDataId, 0), _numberOfFeatures);

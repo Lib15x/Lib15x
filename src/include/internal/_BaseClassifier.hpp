@@ -13,8 +13,35 @@ namespace CPPLearn
     public:
       static const ProblemType ModelType = ProblemType::Classification;
       static constexpr const char* ModelName=DerivedClassifier::ModelName;
-      static constexpr double (*LossFunction)(const Labels&, const Labels&)=
-        Utilities::classificationZeroOneLossFunction;
+      static double
+      LossFunction(const Labels& predictedLabels, const Labels& testLabels)
+      {
+        if (predictedLabels._labelType != ProblemType::Classification ||
+            testLabels._labelType != ProblemType::Classification) {
+          throwException("Error happen when computing classsification error: "
+                         "Input labelType must be Classification!\n");
+        }
+
+        const VectorXd& predictedLabelData=predictedLabels._labelData;
+        const VectorXd& testLabelData=testLabels._labelData;
+
+        if (predictedLabelData.size() != testLabelData.size()){
+          throwException("Error happen when computing classsification error: "
+                         "The inpute two labels have different sizes. "
+                         "sizes of the predicted labels: (%ld); "
+                         "sizes of the test labels: (%ld).\n",
+                         predictedLabelData.size(), testLabelData.size());
+        }
+
+        long numberOfData=predictedLabelData.size();
+
+        double loss=0;
+        for (long dataId=0; dataId<numberOfData; ++dataId)
+          if (std::lround(predictedLabelData(dataId))>=0 && std::lround(testLabelData(dataId)) >=0)
+            loss+=static_cast<double>(predictedLabelData(dataId)!=testLabelData(dataId));
+
+        return loss;
+      }
 
       _BaseClassifier(const long numberOfFeatures, const long numberOfClasses) :
         _numberOfFeatures{numberOfFeatures}, _numberOfClasses{numberOfClasses} { }

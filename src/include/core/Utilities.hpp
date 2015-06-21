@@ -329,60 +329,6 @@ namespace CPPLearn
       return sqrt(var);
     }
 
-    double classificationZeroOneLossFunction(const Labels& predictedLabels,
-                                             const Labels& testLabels)
-    {
-      if (predictedLabels._labelType != ProblemType::Classification ||
-          testLabels._labelType != ProblemType::Classification) {
-        throwException("Error happen when computing classsification error: "
-                       "Input labelType must be Classification!\n");
-      }
-
-      const VectorXd& predictedLabelData=predictedLabels._labelData;
-      const VectorXd& testLabelData=testLabels._labelData;
-
-      if (predictedLabelData.size() != testLabelData.size()){
-        throwException("Error happen when computing classsification error: "
-                       "The inpute two labels have different sizes. "
-                       "sizes of the predicted labels: (%ld); "
-                       "sizes of the test labels: (%ld).\n",
-                       predictedLabelData.size(), testLabelData.size());
-      }
-
-      long numberOfData=predictedLabelData.size();
-
-      double loss=0;
-      for (long dataId=0; dataId<numberOfData; ++dataId)
-        if (std::lround(predictedLabelData(dataId))>=0 && std::lround(testLabelData(dataId)) >=0)
-          loss+=static_cast<double>(predictedLabelData(dataId)!=testLabelData(dataId));
-
-      return loss;
-    }
-
-    double regressionSquaredNormLossFunction(const Labels& predictedLabels,
-                                             const Labels& testLabels)
-    {
-      if (predictedLabels._labelType != ProblemType::Regression ||
-          testLabels._labelType != ProblemType::Regression){
-        throwException("Error happen when computing regression loss: "
-                       "Input labelType must be Regression!\n");
-      }
-
-      const VectorXd& predictedLabelData=predictedLabels._labelData;
-      const VectorXd& testLabelData=testLabels._labelData;
-
-      if (predictedLabelData.size() != testLabelData.size()){
-        throwException("Error happen when computing regression loss: "
-                       "The inpute two labels have different sizes. "
-                       "sizes of the predicted labels: (%ld); "
-                       "sizes of the test labels: (%ld).\n",
-                       predictedLabelData.size(), testLabelData.size());
-      }
-
-      double loss=(predictedLabelData-testLabelData).squaredNorm();
-      return loss;
-    }
-
     template<typename FirstIteratorType, typename SecondIteratorType>
     void
     sortTwoArray(const FirstIteratorType firstStart, const FirstIteratorType firstEnd,
