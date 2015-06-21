@@ -11,15 +11,16 @@ namespace CPPLearn{
   class _BuilderBase{
   public:
     void
-    build(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree)
+    build(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree,
+          vector<long>* sampleIndices)
     {
-      _doBuild(trainData, labelData, tree);
+      _doBuild(trainData, labelData, tree, sampleIndices);
     }
 
   private:
     virtual void
     _doBuild(const MatrixXd& trainData, const VectorXd& labelData,
-             _Tree* tree) = 0;
+             _Tree* tree, vector<long>* sampleIndices) = 0;
   };
 
   template<class _Criterion>
@@ -34,10 +35,12 @@ namespace CPPLearn{
 
   private:
     void
-    _doBuild(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree)
+    _doBuild(const MatrixXd& trainData, const VectorXd& labelData,
+             _Tree* tree, vector<long>* sampleIndices)
     {
       const long numberOfData = trainData.rows();
-      Splitter splitter(&trainData, &labelData, _criterion, _minSamplesInALeaf);
+      Splitter splitter(&trainData, &labelData, _criterion,
+                        _minSamplesInALeaf, sampleIndices);
       std::stack<_StackRecord> recordStack;
       long maxDepthSoFar = -1;
       recordStack.emplace(0, numberOfData, 0, false, std::numeric_limits<double>::max(),
@@ -97,9 +100,9 @@ namespace CPPLearn{
     }
 
   private:
-    const long _minSamplesInANode;
-    const long _minSamplesInALeaf;
-    const long _maxDepthAllowed;
+    long _minSamplesInANode;
+    long _minSamplesInALeaf;
+    long _maxDepthAllowed;
     _Criterion* _criterion;
     //_Splitter _splitter;
     const double _minImpurity=1e-7;
@@ -119,7 +122,8 @@ namespace CPPLearn{
 
   private:
     void
-    _doBuild(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree)
+    _doBuild(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree,
+             vector<long>* sampleIndices)
     {
       auto compareRecord =
         [](const _PriorityQueueRecord& a, const _PriorityQueueRecord& b)
@@ -130,7 +134,8 @@ namespace CPPLearn{
 
       const long numberOfData = trainData.rows();
 
-      Splitter splitter(&trainData, &labelData, _criterion, _minSamplesInALeaf);
+      Splitter splitter(&trainData, &labelData, _criterion,
+                        _minSamplesInALeaf, sampleIndices);
       splitter.resetToThisNode(0, numberOfData);
 
       PriorityQueue recordQueue(compareRecord);
@@ -215,13 +220,13 @@ namespace CPPLearn{
     }
 
   private:
-    const long _minSamplesInANode;
-    const long _minSamplesInALeaf;
-    const long _maxDepthAllowed;
-    const long _maxNumberOfLeafNodes;
+    long _minSamplesInANode;
+    long _minSamplesInALeaf;
+    long _maxDepthAllowed;
+    long _maxNumberOfLeafNodes;
     _Criterion* _criterion;
     //_Splitter _splitter;
-    const double _minImpurity=1e-7;
+    double _minImpurity=1e-7;
   };
 }
 #endif // _BUILDER

@@ -23,8 +23,10 @@ int main(int argc, char* argv[])
   const long numberOfFeatures=trainData.cols();
   const double gamma=1.0/static_cast<double>(numberOfFeatures);
 
-  const Kernel kernel{gamma};
-  LearningModel learningModel{kernel, numberOfFeatures};
+  const long numberOfClasses = static_cast<long>(trainLabels._labelData.maxCoeff())+1;
+
+  LearningModel learningModel{numberOfFeatures, numberOfClasses, Kernel{gamma}};
+  learningModel.whetherVerbose()=VerboseFlag::Verbose;
 
   clock_t t;
   t=clock();

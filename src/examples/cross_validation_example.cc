@@ -31,9 +31,9 @@ int main(int argc, char* argv[])
 
   Kernel kernel{gamma};
   double C = 2.0;
-  BinaryModel binaryModel{kernel, numberOfFeatures,C};
+  BinaryModel binaryModel{numberOfFeatures,2, C, kernel};
   long numberOfClasses = static_cast<long>(trainLabels._labelData.maxCoeff())+1;
-  MulticlassModel multiclassModel{numberOfClasses, binaryModel};
+  MulticlassModel multiclassModel{numberOfFeatures, numberOfClasses, binaryModel};
 
   VectorXd losses=crossValidation.computeValidationLosses(&multiclassModel);
   cout<<1-losses.mean()<<endl;

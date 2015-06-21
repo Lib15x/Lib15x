@@ -148,7 +148,7 @@ namespace CPPLearn {
     long _startIndex;
     long _endIndex;
     long _currentPosition;
-    const long _numberOfClasses;
+    long _numberOfClasses;
     vector<long> _labelsCountTotal;
     vector<long> _labelsCountLeft;
     vector<long> _labelsCountRight;

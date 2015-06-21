@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     labels._labelData(index) += distribution(generator);
 
   double regularizer = 0.0;
-  LearningModel learningModel{regularizer,numberOfFeatures};
+  LearningModel learningModel{numberOfFeatures, regularizer};
 
   learningModel.train(data, labels);
 

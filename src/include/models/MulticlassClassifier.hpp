@@ -2,6 +2,7 @@
 #define MODEL_MULTICLASS_CASSIFIER
 
 #include <core/Definitions.hpp>
+#include "../internal/_BaseClassifier.hpp"
 
 namespace CPPLearn
 {
@@ -11,79 +12,61 @@ namespace CPPLearn
      * enter a brief description
      */
     template<class BinaryClassifier>
-    class MulticlassClassifier
-    {
+    class MulticlassClassifier :
+      public _BaseClassifier<MulticlassClassifier<BinaryClassifier> > {
     public:
-      static const ProblemType ModelType = ProblemType::Classification;
+      using BaseClassifier = _BaseClassifier<MulticlassClassifier<BinaryClassifier> >;
+      using BaseClassifier::train;
       static constexpr const char* ModelName = "MultiClassClassifier";
-      static constexpr double (*LossFunction)(const Labels&, const Labels&)=
-        BinaryClassifier::LossFunction;
-      using ModelPtr = std::unique_ptr<BinaryClassifier>;
+      static constexpr double (*LossFunction)(const Labels&, const Labels&) =
+        BaseClassifier::LossFunction;
 
       /**
        * Creates the model, with empty model initialized.
        *
        * @param
        */
-      MulticlassClassifier(const long numberOfClasses, const BinaryClassifier& binaryModel) :
-        _numberOfFeatures{binaryModel.getNumberOfFeatures()},
-        _numberOfClasses{numberOfClasses},
-        _binaryModels{static_cast<unsigned>(_numberOfClasses*(_numberOfClasses-1)/2)}
+      MulticlassClassifier(const long numberOfFeatures, const long numberOfClasses,
+                           const BinaryClassifier& binaryModel) :
+        BaseClassifier{numberOfFeatures, numberOfClasses},
+        _binaryModels{static_cast<unsigned>(numberOfClasses*(numberOfClasses-1)/2), binaryModel}
       {
-        static_assert(BinaryClassifier::ModelType == ModelType,
-                      "modelType should be classification");
-        for (auto& model : _binaryModels)
-          model = std::make_unique<BinaryClassifier>(binaryModel);
+        static_assert(BinaryClassifier::ModelType == BaseClassifier::ModelType,
+                      "Binary model should be a classification model");
+
+        if (binaryModel.getNumberOfClasses() != 2){
+          throwException("Error happened when constructing Multiclass classifer:\n"
+                         "the number of classes in the provided sample binary "
+                         "classifier is (%ld), which is required to be 2.\n ",
+                         binaryModel.getNumberOfClasses());
+        }
+
       }
 
-      /**
-       * Train the model, the provided data and labels should have the some number of instance.
-       *
-       * @param trainData predictors, the number of columns should be the
-       * same as number of features.
-       * @param trainLabels contains the labels used for training.
-       */
-      void
-      train(const MatrixXd& trainData, const Labels& trainLabels)
+      template<typename... Args>
+      MulticlassClassifier(const long numberOfFeatures, const long numberOfClasses,
+                           const Args... args) :
+        BaseClassifier{numberOfFeatures, numberOfClasses},
+        _binaryModels{static_cast<unsigned>(numberOfClasses*(numberOfClasses-1)/2),
+            BinaryClassifier{numberOfFeatures, 2, args...}}
       {
-        if (trainLabels._labelType != ProblemType::Classification){
-          throwException("Error happen when training LibSVM model: "
-                         "Input labelType must be Classification!\n");
-        }
+        static_assert(BinaryClassifier::ModelType == BaseClassifier::ModelType,
+                      "Binary model should be a classification model");
+      }
 
+
+      void
+      train(const MatrixXd& trainData, const Labels& trainLabels,
+            const vector<long>& trainIndices)
+      {
+        const long numberOfClasses = BaseClassifier::_numberOfClasses;
         const VectorXd& labelData=trainLabels._labelData;
 
-        if (trainData.cols() != _numberOfFeatures){
-          throwException("Error happen when training multiclass classifier: "
-                         "expecting number of features from model: (%ld); "
-                         "privided number of features from data: (%ld).\n",
-                         _numberOfFeatures, trainData.cols());
-        }
+        vector<long> labelsCount(numberOfClasses, 0);
+        for (auto sampleId : trainIndices)
+          ++labelsCount[static_cast<long>(labelData(sampleId))];
 
-        if (trainData.rows() != labelData.size()){
-          throwException("Error happen when training multiclass classifier: "
-                         "data and label size mismatch! "
-                         "number of data: (%ld), "
-                         "number of labels: (%ld), ",
-                         trainData.rows(), labelData.size());
-        }
-
-        vector<long> labelsCount(_numberOfClasses, 0);
-        const long numberOfTrainData = trainData.rows();
-
-        for (long labelIndex=0; labelIndex<numberOfTrainData; ++labelIndex){
-          if (labelData(labelIndex) < 0 || labelData(labelIndex) >= _numberOfClasses){
-            throwException("Error happen when training multiclass classifier: "
-                           "number of classes is (%ld), "
-                           "thus  I am expecting label range between (0) and (%ld)! "
-                           "the (%ld)th label is (%f)!",
-                           _numberOfClasses, _numberOfClasses-1,
-                           labelIndex, labelData(labelIndex));
-          }
-          ++labelsCount[static_cast<long>(labelData(labelIndex))];
-        }
-
-        for (long classIndex=0; classIndex<_numberOfClasses; ++classIndex)
+        for (long classIndex=0; classIndex<numberOfClasses; ++classIndex)
           if (labelsCount[classIndex] == 0){
             throwException("Error happened from Multiclass classifer:\n"
                            "None of the provided training data is classified to class (%ld). "
@@ -91,121 +74,70 @@ namespace CPPLearn
                            classIndex);
           }
 
-        if(_verbose == VerboseFlag::Verbose){
-          cout<<"In Mulicalss Classifier, Multiclass training input label summary: "<<endl;
-          cout<<"number of classes: "<<_numberOfClasses<<endl;
-          cout<<"number of training data: "<<numberOfTrainData<<endl;
-          for (long classIndex=0l; classIndex<_numberOfClasses; ++classIndex)
-            cout<<"number of training data labeled "<<classIndex<<": "<<
-              labelsCount[classIndex]<<endl;
-        }
-
         long modelCount=0;
-        for (long firstIndex=0; firstIndex<_numberOfClasses-1; ++firstIndex)
-          for (long secondIndex=firstIndex+1; secondIndex<_numberOfClasses; ++secondIndex){
-            long numberOfLabels=labelsCount[firstIndex] + labelsCount[secondIndex];
+        for (long firstIndex=0; firstIndex<numberOfClasses-1; ++firstIndex)
+          for (long secondIndex = firstIndex+1; secondIndex<numberOfClasses; ++secondIndex) {
+            long numberOfDataForThisRound = labelsCount[firstIndex] + labelsCount[secondIndex];
             Labels binaryLabels{BinaryClassifier::ModelType};
-            binaryLabels._labelData.resize(numberOfLabels);
-            MatrixXd dataForThisRound{numberOfLabels, _numberOfFeatures};
-            long subModelDataCount=0;
-            for (long dataIndex=0; dataIndex<numberOfTrainData; ++dataIndex){
-              if (labelData(dataIndex) == firstIndex){
-                binaryLabels._labelData(subModelDataCount)=0.0;
-                dataForThisRound.row(subModelDataCount)=trainData.row(dataIndex);
-                ++subModelDataCount;
+            binaryLabels._labelData.resize(trainData.rows());
+            vector<long> indicesForThisRound;
+            indicesForThisRound.reserve(numberOfDataForThisRound);
+            for (auto sampleId : trainIndices){
+              if (labelData(sampleId) == firstIndex){
+                binaryLabels._labelData(sampleId)=0.0;
+                indicesForThisRound.push_back(sampleId);
                 continue;
               }
-              if (labelData(dataIndex)==secondIndex){
-                binaryLabels._labelData(subModelDataCount)=1;
-                dataForThisRound.row(subModelDataCount)=trainData.row(dataIndex);
-                ++subModelDataCount;
+              if (labelData(sampleId)==secondIndex){
+                binaryLabels._labelData(sampleId)=1;
+                indicesForThisRound.push_back(sampleId);
                 continue;
               }
             }
-            assert(subModelDataCount==numberOfLabels);
-            _binaryModels[modelCount]->train(dataForThisRound, binaryLabels);
+            assert(static_cast<long>(indicesForThisRound.size()) == numberOfDataForThisRound);
+            _binaryModels[modelCount].train(trainData, binaryLabels, indicesForThisRound);
             ++modelCount;
           }
 
-        assert(modelCount==_numberOfClasses*(_numberOfClasses-1)/2);
-
-        _modelTrained=true;
+        assert(modelCount==numberOfClasses*(numberOfClasses-1)/2);
+        BaseClassifier::_modelTrained = true;
       }
 
-      /**
-       * Calculate predictions based on trained model, returns the predicted
-       * labels. The model has to be trained first.
-       *
-       * @param testData predictors, the number of columns should be the
-       * same as number of features.
-       */
-      Labels
-      predict(const MatrixXd& testData) const
+
+      double
+      predictOne(const VectorXd& instance) const
       {
-        if (!_modelTrained){
-          throwException("Error happen when predicting with multiclass classifier: "
-                         "model has not been trained yet!");
-        }
+        const long numberOfClasses = BaseClassifier::_numberOfClasses;
+        vector<long> votes(numberOfClasses, 0);
+        long modelCount=0;
+        for (long firstIndex=0; firstIndex<numberOfClasses-1; ++firstIndex)
+          for (long secondIndex=firstIndex+1; secondIndex<numberOfClasses; ++secondIndex){
+            double result = _binaryModels[modelCount].predictOne(instance);
+            result == 0 ? ++votes[firstIndex] : ++votes[secondIndex];
+            ++modelCount;
+          }
 
-        if (testData.cols() != _numberOfFeatures){
-          throwException("Error happen when predicting with multiclass classifier: "
-                         "Invalid inpute data: "
-                         "expecting number of features from model: (%ld); "
-                         "privided number of features from data: (%ld).\n",
-                         _numberOfFeatures, testData.cols());
-        }
+        assert(modelCount==numberOfClasses*(numberOfClasses-1)/2);
 
-        long numberOfTests = testData.rows();
-        Labels predictedLabels{ModelType};
-        predictedLabels._labelData.resize(numberOfTests);
+        auto maxpos=std::max_element(std::begin(votes), std::end(votes));
+        auto it=std::find(maxpos+1, std::end(votes), *maxpos);
+        if (it !=std::end(votes))
+          printf("Warning: In multiclass prediction, the choice predict to label "
+                 "for test data  might not be unique. "
+                 "I choose to predict label (%ld) since it is smaller in numeric order.\n",
+                 maxpos-votes.begin());
 
-        for (long testIndex=0; testIndex<numberOfTests; ++testIndex){
-          VectorXd oneInstance = testData.row(testIndex);
-          vector<long> votes(_numberOfClasses, 0);
-          long modelCount=0;
-          for (long firstIndex=0; firstIndex<_numberOfClasses-1; ++firstIndex)
-            for (long secondIndex=firstIndex+1; secondIndex<_numberOfClasses; ++secondIndex){
-              double result = _binaryModels[modelCount]->predictOne(oneInstance);
-              result == 0 ? ++votes[firstIndex] : ++votes[secondIndex];
-              ++modelCount;
-            }
-
-          assert(modelCount==_numberOfClasses*(_numberOfClasses-1)/2);
-
-          auto maxpos=std::max_element(votes.begin(), votes.end());
-          auto it=std::find(maxpos+1, votes.end(), *maxpos);
-          if (it !=std::end(votes))
-            printf("Warning: In multiclass prediction, the choice predict to label "
-                   "for test data NO. (%ld) is not unique. "
-                   "I choose to predict label (%ld) since it is smaller in numeric order.\n",
-                   testIndex, maxpos-votes.begin());
-          predictedLabels._labelData(testIndex)=static_cast<double>(maxpos-begin(votes));
-        }
-
-        return predictedLabels;
+        return static_cast<double>(maxpos-std::begin(votes));
       }
 
-      /**
-       * Clear the model.
-       */
-      void clear()
+      void _clearModel()
       {
         for (auto& binaryModel : _binaryModels)
-          binaryModel->clear();
-        _modelTrained=false;
-      }
-
-      VerboseFlag& whetherVerbose()
-      {
-        return _verbose;
+          binaryModel.clear();
       }
 
     private:
-      const long _numberOfFeatures;
-      const long _numberOfClasses;
-      vector<ModelPtr> _binaryModels;
-      bool _modelTrained=false;
-      VerboseFlag _verbose = VerboseFlag::Quiet;
+      vector<BinaryClassifier> _binaryModels;
     };
   }
 }

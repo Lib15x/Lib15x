@@ -5,49 +5,33 @@
 #include "../core/Utilities.hpp"
 #include "../external/liblinear.h"
 #include "../external/liblinear.cpp"
+#include "../internal/_BaseClassifier.hpp"
 
 namespace CPPLearn
 {
   namespace Models
   {
-    class LinearLogisticRegression {
+    class LinearLogisticRegression : public _BaseClassifier<LinearLogisticRegression> {
     public:
-      static const ProblemType ModelType = ProblemType::Classification;
+      using BaseClassifier = _BaseClassifier<LinearLogisticRegression>;
+      using BaseClassifier::train;
       static constexpr const char* ModelName="LinearLogisticRegression";
-      static constexpr double (*LossFunction)(const Labels&, const Labels&)=
-        Utilities::classificationZeroOneLossFunction;
+      static constexpr double (*LossFunction)(const Labels&, const Labels&) =
+        BaseClassifier::LossFunction;
 
-      LinearLogisticRegression(const long numberOfFeatures, const Penalty penaltyType,
-                               const double C=1.0, const double bias=-1,
-                               const double tol=1e-5, const double sparseLevelCutOff=1e-5) :
-        _numberOfFeatures{numberOfFeatures}, _linearModel{nullptr},
+      LinearLogisticRegression(const long numberOfFeatures, const long numberOfClasses,
+                               const Penalty penaltyType, const double C=1.0,
+                               const double bias=-1, const double tol=1e-5,
+                               const double sparseLevelCutOff=1e-5) :
+        BaseClassifier{numberOfFeatures, numberOfClasses},
         _penaltyType{penaltyType}, _C{C}, _bias{bias}, _tol{tol},
         _sparseLevelCutOff{sparseLevelCutOff} { }
 
-      void train(const MatrixXd& trainData, const Labels& trainLabels)
+      void
+      train(const MatrixXd& trainData, const Labels& trainLabels,
+            const vector<long>& trainIndices)
       {
-        if (trainLabels._labelType != ProblemType::Classification){
-          throwException("Error happen when training LinearLogisticRegression model: "
-                         "Input labelType must be Classification!\n");
-        }
-
         const VectorXd& labelData=trainLabels._labelData;
-
-        if (trainData.cols() != _numberOfFeatures){
-          throwException("Error happen when training LinearLogisticRegression model, "
-                         "invalid inpute data: "
-                         "expecting number of features from model: (%ld); "
-                         "privided number of features from data: (%ld).\n",
-                         _numberOfFeatures, trainData.cols());
-        }
-
-        if (trainData.rows() != labelData.size()){
-          throwException("data and label size mismatch! "
-                         "number of data: (%ld), "
-                         "number of labels: (%ld), ",
-                         trainData.rows(), labelData.size());
-        }
-
         liblinear::parameter linearParam;
 
         switch (_penaltyType){
@@ -75,7 +59,8 @@ namespace CPPLearn
 
         liblinear::feature_node* x_space= nullptr;
 
-        constructLiblinearProblem(trainData, labelData, &linearProblem, &x_space);
+        _constructLiblinearProblem(trainData, labelData, trainIndices,
+                                   &linearProblem, &x_space);
 
         _linearModel = liblinear::train(&linearProblem, &linearParam);
 
@@ -85,7 +70,7 @@ namespace CPPLearn
         assert(_linearModel->param.C==_C);
 
         assert(&(_linearModel->param)!=&linearParam);
-        assert(_linearModel->nr_feature == _numberOfFeatures);
+        assert(_linearModel->nr_feature == BaseClassifier::_numberOfFeatures);
 
         liblinear::destroy_param(&linearParam);
         free(linearProblem.y);
@@ -94,42 +79,18 @@ namespace CPPLearn
         _modelTrained=true;
       }
 
-      Labels predict(const MatrixXd& testData) const
-      {
-        if (!_modelTrained){
-          throwException("Error happen when predicting with LinearLogisticRegression model: "
-                         "Model has not been trained yet!");
-        }
-
-        if (testData.cols() != _numberOfFeatures){
-          throwException("Error happen when predicting with LinearLogisticRegression: "
-                         "Invalid inpute data, "
-                         "expecting number of features from model: (%ld); "
-                         "privided number of features from data: (%ld).\n",
-                         _numberOfFeatures, testData.cols());
-        }
-
-        long numberOfTests=testData.rows();
-        Labels predictedLabels{ProblemType::Classification};
-        predictedLabels._labelData.resize(numberOfTests);
-
-        for (long rowIndex=0; rowIndex<numberOfTests; ++rowIndex){
-          Map<const VectorXd> instance(&testData(rowIndex, 0), _numberOfFeatures);
-          predictedLabels._labelData(rowIndex) = predictOne(instance);
-        }
-
-        return predictedLabels;
-      }
-
       double predictOne(const VectorXd& instance) const
       {
+        assert(BaseClassifier::_modelTrained);
+        assert(_linearModel);
         //need to take care of bias term
+        long numberOfFeatures = BaseClassifier::_numberOfFeatures;
         long maxNrAttr = 64;
         auto thisNode = (liblinear::feature_node*)
           malloc(maxNrAttr*sizeof(liblinear::feature_node));
 
         long numberOfNonZeroElementsAndBias=0;
-        for (long featId=0l; featId<_numberOfFeatures; ++featId){
+        for (long featId=0; featId<numberOfFeatures; ++featId){
           if (fabs(instance(featId)) > _sparseLevelCutOff){
             if(numberOfNonZeroElementsAndBias >= maxNrAttr-2){  // need one more for index = -1 {
               maxNrAttr *= 2;
@@ -144,7 +105,7 @@ namespace CPPLearn
 
         //add bias term
         if(_bias>=0) {
-          thisNode[numberOfNonZeroElementsAndBias].index = static_cast<int>(_numberOfFeatures)+1;
+          thisNode[numberOfNonZeroElementsAndBias].index = static_cast<int>(numberOfFeatures)+1;
           thisNode[numberOfNonZeroElementsAndBias].value = _bias;
           numberOfNonZeroElementsAndBias++;
         }
@@ -155,70 +116,132 @@ namespace CPPLearn
         return result;
       }
 
-      const long& getNumberOfFeatures() const
-      {
-        return _numberOfFeatures;
-      }
-
-
-      /**
-       * Clear the model.
-       */
-      void clear()
+      void _clearModel()
       {
         liblinear::free_and_destroy_model(&_linearModel);
         _linearModel=nullptr;
-        _modelTrained=false;
       }
 
-      VerboseFlag& whetherVerbose()
+      LinearLogisticRegression (const LinearLogisticRegression& other) :
+        BaseClassifier{other}, _linearModel{nullptr},
+        _penaltyType{other._penaltyType},
+        _C{other._C}, _bias{other._bias},
+        _tol{other._tol}, _sparseLevelCutOff{other._sparseLevelCutOff}
       {
-        return _verbose;
+        _linearModel = _copyLibLinearModel(other._linearModel);
       }
 
-      /**
-       * Destructor.
-       */
+      LinearLogisticRegression (LinearLogisticRegression&& other) :
+        BaseClassifier{std::move(other)}, _linearModel{nullptr},
+        _penaltyType{other._penaltyType},
+        _C{other._C}, _bias{other._bias},
+        _tol{other._tol}, _sparseLevelCutOff{other._sparseLevelCutOff}
+      {
+        std::swap(_linearModel, other._linearModel);
+      }
+
+      LinearLogisticRegression& operator = (LinearLogisticRegression other)
+      {
+        BaseClassifier::operator =(other);
+        _penaltyType = other._penaltyType;
+        _C = other._C;
+        _bias = other._bias;
+        _tol = other._tol;
+        _sparseLevelCutOff = other._sparseLevelCutOff;
+        std::swap(_linearModel, other._linearModel);
+        return *this;
+      }
+
+      LinearLogisticRegression& operator = (LinearLogisticRegression&& other)
+      {
+        BaseClassifier::operator =(std::move(other));
+        _penaltyType = other._penaltyType;
+        _C = other._C;
+        _bias = other._bias;
+        _tol = other._tol;
+        _sparseLevelCutOff = other._sparseLevelCutOff;
+        std::swap(_linearModel, other._linearModel);
+        return *this;
+      }
+
       ~LinearLogisticRegression()
       {
         liblinear::free_and_destroy_model(&_linearModel);
       }
-
     private:
-      const long _numberOfFeatures;
-      //! liblinear model defined in the liblinear library.
-      liblinear::model* _linearModel;
-      const Penalty _penaltyType;
-      //! regularization parameter.
-      const double _C;
-      const double _bias;
-      double _tol;
-      //! Indicates whether the model has been trained.
-      bool _modelTrained=false;
-      VerboseFlag _verbose = VerboseFlag::Quiet;
-      const double _sparseLevelCutOff;
-
-    private:
-      void constructLiblinearProblem(const MatrixXd& trainData, const VectorXd& labelData,
-                                     liblinear::problem* prob,
-                                     liblinear::feature_node** x_space) const
+      liblinear::model* _copyLibLinearModel(const liblinear::model* const other)
       {
-        long numberOfData=trainData.rows();
+        if (!other) return nullptr;
+        liblinear::model *copy = (liblinear::model *)malloc(sizeof(liblinear::model));
+
+        copy->param = other->param;
+        copy->nr_class = other->nr_class;
+        copy->nr_feature = other->nr_feature;
+        copy->w = nullptr;
+        copy->label = nullptr;
+        copy->bias = other->bias;
+
+        if (other->label) {
+          copy->label = (int*)malloc(other->nr_class*sizeof(int));
+          for (int i=0; i<other->nr_class; ++i)
+            copy->label[i] = other->label[i];
+        }
+
+        if (other->label) {
+          copy->label = (int*)malloc(other->nr_class*sizeof(int));
+          for (int i=0; i<other->nr_class; ++i)
+            copy->label[i] = other->label[i];
+        }
+
+        if (other->w) {
+          int n;
+          int nr_feature=other->nr_feature;
+          if(other->bias>=0)
+            n=nr_feature+1;
+          else
+            n=nr_feature;
+
+          int w_size = n;
+          int nr_w;
+          if(other->nr_class==2 && other->param.solver_type != liblinear::MCSVM_CS)
+            nr_w = 1;
+          else
+            nr_w = other->nr_class;
+
+          copy->w=(double*)malloc(w_size*nr_w*sizeof(double));
+          for(int i=0; i<w_size*nr_w; i++) {
+                copy->w[i]=other->w[i];
+          }
+        }
+
+        return copy;
+      }
+
+    private:
+      void _constructLiblinearProblem(const MatrixXd& trainData, const VectorXd& labelData,
+                                      const vector<long>& trainIndices,
+                                      liblinear::problem* prob,
+                                      liblinear::feature_node** x_space) const
+      {
+        long numberOfFeatures = BaseClassifier::_numberOfFeatures;
+        long numberOfData=trainIndices.size();
         vector<long> nonZeroIndexX;
-        nonZeroIndexX.reserve(numberOfData*_numberOfFeatures);
+        nonZeroIndexX.reserve(numberOfData*numberOfFeatures);
         vector<long> nonZeroIndexY;
-        nonZeroIndexY.reserve(numberOfData*_numberOfFeatures);
+        nonZeroIndexY.reserve(numberOfData*numberOfFeatures);
         vector<long> nonZeroFeatureCountEachData(numberOfData, 0);
 
         prob->l = static_cast<int>(numberOfData);
         long numberOfNonZeroElementsAndBias=0;
 
-        for (long dataId=0; dataId<numberOfData; ++dataId){
-          for (long featId=0; featId<_numberOfFeatures; ++featId)
-            if (fabs(trainData(dataId,featId))>_sparseLevelCutOff) {
-              nonZeroIndexX.push_back(dataId);
+        //for (auto& sampleId : trainIndices) {
+        for (long sampleId=0; sampleId<numberOfData; ++sampleId){
+          long dataIndex = trainIndices[sampleId];
+          for (long featId=0; featId<numberOfFeatures; ++featId)
+            if (fabs(trainData(dataIndex,featId))>_sparseLevelCutOff) {
+              nonZeroIndexX.push_back(sampleId);
               nonZeroIndexY.push_back(featId);
-              ++nonZeroFeatureCountEachData[dataId];
+              ++nonZeroFeatureCountEachData[sampleId];
               ++numberOfNonZeroElementsAndBias;
             }
           ++numberOfNonZeroElementsAndBias;
@@ -233,10 +256,12 @@ namespace CPPLearn
         long currentPosInXSpace=0;
         long currentPosInData=0;
 
-        for(long dataId=0; dataId<numberOfData; ++dataId) {
-          prob->x[dataId] = &(*x_space)[currentPosInXSpace]; //the first two operator cannt collapes
-          prob->y[dataId] = labelData[dataId];
-          for (long nonZeroId=0; nonZeroId<nonZeroFeatureCountEachData[dataId]; ++nonZeroId){
+        for(long sampleId=0; sampleId<numberOfData; ++sampleId) {
+          long dataIndex=trainIndices[sampleId];
+          //the first two operator cannt collapes
+          prob->x[sampleId] = &(*x_space)[currentPosInXSpace];
+          prob->y[sampleId] = labelData[dataIndex];
+          for (long nonZeroId=0; nonZeroId<nonZeroFeatureCountEachData[sampleId]; ++nonZeroId) {
             long xIndex=nonZeroIndexX[currentPosInData];
             long yIndex=nonZeroIndexY[currentPosInData];
             (*x_space)[currentPosInXSpace].index = static_cast<int>(yIndex)+1;
@@ -251,14 +276,22 @@ namespace CPPLearn
         }
 
         if(prob->bias >= 0) {
-          prob->n = static_cast<int>(_numberOfFeatures)+1;
+          prob->n = static_cast<int>(numberOfFeatures)+1;
           for(long dataId=1; dataId < prob->l; ++dataId)
             (prob->x[dataId]-2)->index = prob->n;
           (*x_space)[currentPosInXSpace-2].index = prob->n;
         }
         else
-          prob->n = static_cast<int>(_numberOfFeatures);
+          prob->n = static_cast<int>(numberOfFeatures);
       }
+
+    private:
+      liblinear::model* _linearModel;
+      Penalty _penaltyType;
+      double _C;
+      double _bias;
+      double _tol;
+      double _sparseLevelCutOff;
     };
   }
 }

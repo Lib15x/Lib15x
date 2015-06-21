@@ -11,7 +11,9 @@ int main(int argc, char* argv[])
   ignoreUnusedVariables(argc, argv);
   constexpr double (*LossFunction)(const Labels&, const Labels&)=LearningModel::LossFunction;
 
-  string trainfilename="../../data/libsvm/heart_scale.cl";
+  //string trainfilename="../../data/libsvm/heart_scale.cl";
+  //const string trainfilename="../../data/test/libsvm_train_1.cl";
+  const string trainfilename = "../../data/libsvm/glass.scale.cl";
 
   std::pair<MatrixXd, Labels> trainPair= Utilities::readCPPLearnDataFile(trainfilename);
   const MatrixXd& trainData=trainPair.first;
@@ -19,9 +21,11 @@ int main(int argc, char* argv[])
 
   const long numberOfData=trainData.rows();
   const long numberOfFeatures=trainData.cols();
+  const long numberOfClasses = static_cast<long>(trainLabels._labelData.maxCoeff())+1;
 
   const Penalty penaltyType = Penalty::L1;
-  LearningModel learningModel{numberOfFeatures, penaltyType};
+  LearningModel learningModel{numberOfFeatures, numberOfClasses, penaltyType};
+  learningModel.whetherVerbose()=VerboseFlag::Verbose;
 
   clock_t t;
   t=clock();
@@ -37,6 +41,7 @@ int main(int argc, char* argv[])
   double accuracy=1.0-LossFunction(predictedLabels, trainPair.second)/(double)numberOfData;
   printf("accuracy = %f%%, (%ld / %ld)\n", accuracy*100,
          (long)(accuracy*(double)numberOfData), numberOfData);
+
 
   return 0;
 }

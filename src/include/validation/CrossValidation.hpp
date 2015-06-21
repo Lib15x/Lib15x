@@ -26,14 +26,14 @@ namespace CPPLearn
     CrossValidation(const MatrixXd& data, const Labels& labels,
                     const long numberOfFolds=5,
                     const bool shuffle=false) :
-      _data{data}, _labels{labels}, _numberOfFolds{numberOfFolds}
+      _data{&data}, _labels{&labels}, _numberOfFolds{numberOfFolds}
     {
-      long numberOfData = _data.rows();
-      if (_data.rows() != _labels._labelData.size()){
+      long numberOfData = _data->rows();
+      if (_data->rows() != _labels->_labelData.size()){
         throwException("Error happened in CrossValidation constructor:\n"
                        "Provided data and label sizes mismatch!\n"
                        "number of data = (%ld), number of labels = (%ld).\n",
-                       numberOfData, _labels._labelData.size());
+                       numberOfData, _labels->_labelData.size());
 
       }
 
@@ -43,10 +43,10 @@ namespace CPPLearn
                        "and no larger than number of data! \n");
       }
 
-      switch (_labels._labelType){
+      switch (_labels->_labelType){
       case ProblemType::Classification :
         try {
-          _foldsIndices=StratifiedKFolds(_labels, _numberOfFolds, shuffle);
+          _foldsIndices=StratifiedKFolds(*_labels, _numberOfFolds, shuffle);
         }
         catch(std::exception& e) {
           printf("Error happend in CrossValidation constructor.\n");
@@ -55,7 +55,7 @@ namespace CPPLearn
         break;
       case ProblemType::Regression :
         try{
-          _foldsIndices=KFolds(_labels._labelData.size(), _numberOfFolds, shuffle);
+          _foldsIndices=KFolds(_labels->_labelData.size(), _numberOfFolds, shuffle);
         }
         catch (std::exception& e){
           printf("Error happend in CrossValidation constructor.\n");
@@ -78,50 +78,54 @@ namespace CPPLearn
     VectorXd
     computeValidationLosses(LearningModel* learningModel) const
     {
-      if (LearningModel::ModelType != _labels._labelType) {
+      if (LearningModel::ModelType != _labels->_labelType) {
         throwException("Error happened when calling computeValidationScore function:"
                        "The learning model and labels have different problem types!\n");
       }
+
+      if (_data->cols() != learningModel->getNumberOfFeatures()){
+        throwException("Error happen when compute cross validation score, "
+                       "number of features from learning model %s is different "
+                       "from the data used to construct cross validation folds: "
+                       "number of features from model: (%ld); "
+                       "number of features from data: (%ld).\n",
+                       LearningModel::ModelName, learningModel->getNumberOfFeatures(),
+                       _data->cols());
+      }
+
       double (*const LossFunction)(const Labels&, const Labels&)=LearningModel::LossFunction;
       VectorXd losses{_numberOfFolds}; losses.fill(0);
-      long numberOfFeatures=_data.cols();
-      long numberOfData=_data.rows();
+      //const long numberOfFeatures=_data.cols();
+      const long numberOfData=_data->rows();
 
       for (long currentRoundId =0; currentRoundId<_numberOfFolds; ++currentRoundId) {
-        const vector<long>& indicesOfThisFold = _foldsIndices[currentRoundId];
-        long numberOfTestsOfThisFold = static_cast<long>(indicesOfThisFold.size());
-        long numberOfTrainsOfThisFold=numberOfData-numberOfTestsOfThisFold;
+        const vector<long>& testIndicesOfThisFold = _foldsIndices[currentRoundId];
+        const long numberOfTestsOfThisFold = static_cast<long>(testIndicesOfThisFold.size());
+        const long numberOfTrainsOfThisFold=numberOfData-numberOfTestsOfThisFold;
 
-        MatrixXd trainDataOfThisFold{numberOfTrainsOfThisFold, numberOfFeatures};
-        MatrixXd testDataOfThisFold{numberOfTestsOfThisFold, numberOfFeatures};
+        vector<long> trainIndicesOfThisFold(numberOfData, 0);
+        std::iota(std::begin(trainIndicesOfThisFold), std::end(trainIndicesOfThisFold), 0);
 
-        Labels trainLabelsOfThisFold{_labels._labelType};
-        Labels testLabelsOfThisFold{_labels._labelType};
-        trainLabelsOfThisFold._labelData.resize(numberOfTrainsOfThisFold);
-        testLabelsOfThisFold._labelData.resize(numberOfTestsOfThisFold);
+        auto testFoldIter = std::begin(testIndicesOfThisFold);
 
-        for (long id=0; id<numberOfTestsOfThisFold; ++id){
-          testDataOfThisFold.row(id) = _data.row(indicesOfThisFold[id]);
-          testLabelsOfThisFold._labelData(id) = _labels._labelData(indicesOfThisFold[id]);
-        }
+        auto endIter =
+          remove_if(std::begin(trainIndicesOfThisFold),
+                    std::end(trainIndicesOfThisFold),
+                    [&testFoldIter, &testIndicesOfThisFold](long index){
+                      if (testFoldIter == std::end(testIndicesOfThisFold)) return false;
+                      if (index != *testFoldIter) return false;
+                      ++testFoldIter; return true;});
 
-        long trainDataIndex=0;
-        for (const auto& indicesOfOtherFold : _foldsIndices){
-          if (&indicesOfOtherFold==&indicesOfThisFold) continue;
-          for (auto& dataIndex : indicesOfOtherFold){
-            trainDataOfThisFold.row(trainDataIndex) = _data.row(dataIndex);
-            trainLabelsOfThisFold._labelData(trainDataIndex)= _labels._labelData(dataIndex);
-            ++trainDataIndex;
-          }
-        }
+        trainIndicesOfThisFold.erase(endIter, std::end(trainIndicesOfThisFold));
 
-        assert(trainDataIndex==numberOfTrainsOfThisFold);
+        assert(static_cast<long>(trainIndicesOfThisFold.size()) == numberOfTrainsOfThisFold);
 
         try {
-          learningModel->train(trainDataOfThisFold, trainLabelsOfThisFold);
-          Labels predictedLabels = learningModel->predict(testDataOfThisFold);
+          learningModel->train(*_data, *_labels, trainIndicesOfThisFold);
+          Labels predictedLabels = learningModel->predict(*_data, testIndicesOfThisFold);
           losses(currentRoundId)=
-            LossFunction(predictedLabels, testLabelsOfThisFold)/static_cast<double>(numberOfTestsOfThisFold);
+            LossFunction(predictedLabels, *_labels)/
+            static_cast<double>(numberOfTestsOfThisFold);
         }
         catch (std::exception& e){
           printf("Error happened in computeValidationScore function: "
@@ -135,9 +139,9 @@ namespace CPPLearn
 
   private:
     vector<vector<long> > _foldsIndices;
-    const MatrixXd& _data;
-    const Labels& _labels;
-    const long _numberOfFolds;
+    const MatrixXd* _data;
+    const Labels* _labels;
+    long _numberOfFolds;
   };
 
   vector<vector<long > >

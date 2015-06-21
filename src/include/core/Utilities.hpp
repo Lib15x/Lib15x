@@ -353,7 +353,8 @@ namespace CPPLearn
 
       double loss=0;
       for (long dataId=0; dataId<numberOfData; ++dataId)
-        loss+=static_cast<double>(predictedLabelData(dataId)!=testLabelData(dataId));
+        if (std::lround(predictedLabelData(dataId))>=0 && std::lround(testLabelData(dataId)) >=0)
+          loss+=static_cast<double>(predictedLabelData(dataId)!=testLabelData(dataId));
 
       return loss;
     }

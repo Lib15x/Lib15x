@@ -38,10 +38,11 @@ int main(int argc, char* argv[])
   const double gamma=1.0/static_cast<double>(numberOfFeatures);
   const Kernel kernel{gamma};
   const double C=1.0;
-  BinaryModel binaryModel{kernel, numberOfFeatures,C};
+  BinaryModel binaryModel{numberOfFeatures, 2, C, kernel};
 
   const long numberOfClasses = static_cast<long>(trainLabels._labelData.maxCoeff())+1;
-  MulticlassModel multiclassModel{numberOfClasses, binaryModel};
+  //MulticlassModel multiclassModel{numberOfFeatures, numberOfClasses, binaryModel};
+  MulticlassModel multiclassModel{numberOfFeatures, numberOfClasses, binaryModel};
 
   clock_t t;
   t=clock();

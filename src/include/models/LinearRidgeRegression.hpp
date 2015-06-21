@@ -3,6 +3,7 @@
 
 #include "../core/Definitions.hpp"
 #include "../core/Utilities.hpp"
+#include "../internal/_BaseRegressor.hpp"
 
 namespace CPPLearn
 {
@@ -11,84 +12,68 @@ namespace CPPLearn
     /**
      * brief introduction
      */
-    class LinearRidgeRegression{
+    class LinearRidgeRegression : public _BaseRegressor<LinearRidgeRegression> {
     public:
-      static const ProblemType ModelType = ProblemType::Regression;
+      using BaseRegressor = _BaseRegressor<LinearRidgeRegression >;
+      using BaseRegressor::train;
       static constexpr const char* ModelName = "LinearRidgeRegression";
-      static constexpr double (*LossFunction)(const Labels&, const Labels&)=
-        Utilities::regressionSquaredNormLossFunction;
+      static constexpr double (*LossFunction)(const Labels&, const Labels&) =
+        BaseRegressor::LossFunction;
       /**
        * constructor
        */
-      LinearRidgeRegression(const double regularizer, const long numberOfFeatures) :
-        _regularizer{regularizer}, _numberOfFeatures{numberOfFeatures} {}
+      LinearRidgeRegression(const long numberOfFeatures, const double regularizer) :
+        BaseRegressor{numberOfFeatures}, _regularizer{regularizer} { }
 
       /**
        * train the model
        *
        */
-      void train(const MatrixXd& trainData, const Labels& trainLabels)
+      void
+      train(const MatrixXd& trainData, const Labels& trainLabels,
+            const vector<long>& trainIndices)
       {
-        if (trainLabels._labelType != ProblemType::Regression){
-          throwException("Error happen when training LinearRigdgeRegression model: "
-                         "Input labelType must be Regression!\n");
-        }
-
+        const long numberOfFeatures = BaseRegressor::_numberOfFeatures;
+        const long numberOfData=trainIndices.size();
         const VectorXd& labelData=trainLabels._labelData;
+        MatrixXd matrixC(numberOfFeatures, numberOfFeatures);
 
-        if (trainData.cols() != _numberOfFeatures){
-          throwException("Error happen when training LinearRidgeRegression model, "
-                         "invalid inpute data: "
-                         "expecting number of features from model: (%ld); "
-                         "privided number of features from data: (%ld).\n",
-                         _numberOfFeatures, trainData.cols());
+        long index=0;
+        if (trainData.rows() == numberOfData)
+          for (; index<numberOfData; ++index)
+            if(trainIndices[index] != index) break;
+
+        if (index != trainData.rows()) {
+          MatrixXd thisData(numberOfData, numberOfFeatures);
+          for (long dataId=0; dataId<numberOfData; ++dataId)
+            thisData.row(dataId)=trainData.row(trainIndices[dataId]);
+          matrixC = thisData.transpose()*thisData +
+            _regularizer*MatrixXd::Identity(_numberOfFeatures, _numberOfFeatures);
         }
+        else
+          matrixC = trainData.transpose()*trainData +
+            _regularizer*MatrixXd::Identity(_numberOfFeatures, _numberOfFeatures);
 
-        if (trainData.rows() != labelData.size()){
-          throwException("data and label size mismatch! "
-                         "number of data: (%ld), "
-                         "number of labels: (%ld), ",
-                         trainData.rows(), labelData.size());
-        }
-
-        MatrixXd matrixC = trainData.transpose()*trainData +
-          _regularizer*MatrixXd::Identity(_numberOfFeatures, _numberOfFeatures);
         _parameters=matrixC.llt().solve(trainData.transpose()*labelData);
-        _modelTrained = true;
+
+        BaseRegressor::_modelTrained = true;
       }
 
       /**
        * predicting
        *
        */
-      Labels predict(const MatrixXd& testData)
+      double predictOne(const VectorXd& instance) const
       {
-        if (!_modelTrained){
-          throwException("Error happen when predicting with LinearRidgeRegression model: "
-                         "Model has not been trained yet!");
-        }
-
-        if (testData.cols() != _numberOfFeatures){
-          throwException("Error happen when predicting with LinearRidgeRegression model: "
-                         "Invalid inpute data, "
-                         "expecting number of features from model: (%ld); "
-                         "privided number of features from data: (%ld).\n",
-                         _numberOfFeatures, testData.cols());
-        }
-
-        long numberOfTests=testData.rows();
-        Labels predictedLabels{ProblemType::Regression};
-        predictedLabels._labelData.resize(numberOfTests);
-
-        predictedLabels._labelData = testData*_parameters;
-        return predictedLabels;
+        assert(BaseRegressor::_modelTrained);
+        return _parameters.dot(instance);
       }
 
+      void _clearModel() { }
+
     private:
-      const double _regularizer;
-      const long _numberOfFeatures;
+      double _regularizer;
       VectorXd _parameters;
-      bool _modelTrained = false;
     };
   }
 }

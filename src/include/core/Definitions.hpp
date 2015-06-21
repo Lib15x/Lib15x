@@ -55,7 +55,7 @@ namespace CPPLearn
 
   struct Labels
   {
-    const ProblemType _labelType;
+    ProblemType _labelType;
     VectorXd _labelData;
 
     Labels(const ProblemType labelType) : _labelType{labelType}

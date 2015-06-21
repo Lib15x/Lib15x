@@ -1,9 +1,10 @@
 #include <core/Definitions.hpp>
 #include <core/Utilities.hpp>
 #include <models/TreeClassifier.hpp>
+#include <models/BaggingClassifier.hpp>
 
 using namespace CPPLearn;
-using LearningModel=Models::TreeClassifier<>;
+using LearningModel=Models::BaggingClassifier<>;
 
 int main(int argc, char* argv[])
 {
@@ -17,16 +18,16 @@ int main(int argc, char* argv[])
 
   const long numberOfFeatures=trainData.cols();
   const long numberOfClasses = static_cast<long>(trainLabels._labelData.maxCoeff())+1;
+  const long numberOfTrees=1;
 
-  LearningModel learningModel{numberOfFeatures, numberOfClasses};
+  LearningModel learningModel{numberOfFeatures, numberOfClasses, numberOfTrees};
   learningModel.whetherVerbose()=VerboseFlag::Verbose;
-
   learningModel.train(trainData, trainLabels);
   Labels predictedLabels=learningModel.predict(trainData);
 
   double loss=LossFunction(predictedLabels, trainLabels);
   cout<<"classification error on training set = "<<loss<<endl;
-  learningModel.clear();
+  //cout<<predictedLabels._labelData<<endl;
 
   return 0;
 }

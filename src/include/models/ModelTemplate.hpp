@@ -101,7 +101,7 @@ namespace CPPLearn
 
 
     private:
-      const long _numberOfFeatures;
+      long _numberOfFeatures;
       bool _modelTrained=false;
       VerboseFlag _verbose = VerboseFlag::Quiet;
 
