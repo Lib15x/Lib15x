@@ -225,7 +225,7 @@ namespace CPPLearn
         model->param = svmModel->param;
         model-> nr_class = svmModel->nr_class;
         model-> l = svmModel->l;
-        model->free_sv = svmModel->free_sv; // XXX
+        model->free_sv = svmModel->free_sv;
 
         model->rho = nullptr;
         model->probA = nullptr;
@@ -235,7 +235,6 @@ namespace CPPLearn
         model->nSV = nullptr;
         model->SV = nullptr;
         model->sv_coef = nullptr;
-
 
         if (svmModel->rho) {
           int n = model->nr_class * (model->nr_class-1)/2;
@@ -273,7 +272,7 @@ namespace CPPLearn
           for(int i=0;i<n;i++) model->sv_indices[i] = svmModel->sv_indices[i];
         }
 
-        if (svmModel->SV){
+        if (svmModel->SV) {
           model->SV = (libsvm::svm_node**)malloc(svmModel->l*sizeof(libsvm::svm_node*));
           auto vector_sv = (libsvm::svm_node*)malloc(svmModel->l*sizeof(libsvm::svm_node));
           for (long svIndex = 0; svIndex < svmModel->l; ++svIndex){
@@ -283,7 +282,7 @@ namespace CPPLearn
           }
         }
 
-        if (svmModel->sv_coef){
+        if (svmModel->sv_coef) {
           int m = model->nr_class - 1;
           model->sv_coef = (double**)malloc(m*sizeof(double *));
           for(int i=0;i<m;i++) {
@@ -309,8 +308,6 @@ namespace CPPLearn
       double _cacheSize=100;
       Kernel _kernel;
     };
-
-
   }
 }
 
