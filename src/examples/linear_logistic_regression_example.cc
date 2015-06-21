@@ -11,9 +11,7 @@ int main(int argc, char* argv[])
   ignoreUnusedVariables(argc, argv);
   constexpr double (*LossFunction)(const Labels&, const Labels&)=LearningModel::LossFunction;
 
-  //string trainfilename="../../data/libsvm/heart_scale.cl";
-  //const string trainfilename="../../data/test/libsvm_train_1.cl";
-  const string trainfilename = "../../data/libsvm/glass.scale.cl";
+  string trainfilename="../../data/libsvm/heart_scale.cl";
 
   std::pair<MatrixXd, Labels> trainPair= Utilities::readCPPLearnDataFile(trainfilename);
   const MatrixXd& trainData=trainPair.first;
