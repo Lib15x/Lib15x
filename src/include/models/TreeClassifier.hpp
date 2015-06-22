@@ -55,26 +55,34 @@ namespace CPPLearn
 
         Criterion criterion{BaseClassifier::_numberOfClasses};
 
-        std::unique_ptr<_BuilderBase> builder=nullptr;
-        if (_maxNumberOfLeafNodes < 0)
-          builder=std::make_unique<_DepthFirstBuilder<Criterion> >(_minSamplesInALeaf,
-                                                                   _minSamplesInANode,
-                                                                   _maxDepth,
-                                                                   &criterion);
-        else
-          builder=std::make_unique<_BestFirstBuilder<Criterion> >(_minSamplesInALeaf,
-                                                                  _minSamplesInANode,
-                                                                  _maxDepth,
-                                                                  _maxNumberOfLeafNodes,
-                                                                  &criterion);
+        if (_maxNumberOfLeafNodes < 0) {
+          _DepthFirstBuilder<Criterion> builder(_minSamplesInALeaf,
+                                                _minSamplesInANode,
+                                                _maxDepth,
+                                                &criterion);
+          try {
+            builder.build(trainData, labelData, &_tree, &trainIndices);
+          }
+          catch (...) {
+            cout<<"exception caught when training tree classifier: "<<endl;
+            throw;
+          }
+        }
+        else {
+          _BestFirstBuilder<Criterion> builder(_minSamplesInALeaf,
+                                               _minSamplesInANode,
+                                               _maxDepth,
+                                               _maxNumberOfLeafNodes,
+                                               &criterion);
+          try {
+            builder.build(trainData, labelData, &_tree, &trainIndices);
+          }
+          catch (...) {
+            cout<<"exception caught when training tree classifier: "<<endl;
+            throw;
+          }
+        }
 
-        try {
-          builder->build(trainData, labelData, &_tree, &trainIndices);
-        }
-        catch (...) {
-          cout<<"exception caught when training tree classifier: "<<endl;
-          throw;
-        }
         BaseClassifier::_modelTrained = true;
 
       }

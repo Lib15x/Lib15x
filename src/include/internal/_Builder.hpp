@@ -8,23 +8,8 @@
 
 namespace CPPLearn{
 
-  class _BuilderBase{
-  public:
-    void
-    build(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree,
-          vector<long>* sampleIndices)
-    {
-      _doBuild(trainData, labelData, tree, sampleIndices);
-    }
-
-  private:
-    virtual void
-    _doBuild(const MatrixXd& trainData, const VectorXd& labelData,
-             _Tree* tree, vector<long>* sampleIndices) = 0;
-  };
-
   template<class _Criterion>
-  class _DepthFirstBuilder : public _BuilderBase {
+  class _DepthFirstBuilder {
   public:
     using Splitter = _Splitter<_Criterion>;
 
@@ -33,10 +18,9 @@ namespace CPPLearn{
       _minSamplesInANode{minSamplesInANode}, _minSamplesInALeaf{minSamplesInALeaf},
       _maxDepthAllowed{maxDepthAllowed}, _criterion{criterion} { }
 
-  private:
     void
-    _doBuild(const MatrixXd& trainData, const VectorXd& labelData,
-             _Tree* tree, vector<long>* sampleIndices)
+    build(const MatrixXd& trainData, const VectorXd& labelData,
+          _Tree* tree, vector<long>* sampleIndices)
     {
       const long numberOfData = trainData.rows();
       Splitter splitter(&trainData, &labelData, _criterion,
@@ -104,12 +88,11 @@ namespace CPPLearn{
     long _minSamplesInALeaf;
     long _maxDepthAllowed;
     _Criterion* _criterion;
-    //_Splitter _splitter;
     const double _minImpurity=1e-7;
   };
 
   template<class _Criterion>
-  class _BestFirstBuilder : public _BuilderBase {
+  class _BestFirstBuilder {
   public:
     using Splitter= _Splitter<_Criterion>;
 
@@ -120,9 +103,8 @@ namespace CPPLearn{
       _maxDepthAllowed{maxDepthAllowed}, _maxNumberOfLeafNodes{maxNumberOfLeafNodes},
       _criterion{criterion} { }
 
-  private:
     void
-    _doBuild(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree,
+    build(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree,
              vector<long>* sampleIndices)
     {
       auto compareRecord =
@@ -225,7 +207,6 @@ namespace CPPLearn{
     long _maxDepthAllowed;
     long _maxNumberOfLeafNodes;
     _Criterion* _criterion;
-    //_Splitter _splitter;
     double _minImpurity=1e-7;
   };
 }
