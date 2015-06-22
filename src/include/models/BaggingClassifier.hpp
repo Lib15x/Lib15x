@@ -3,6 +3,7 @@
 
 #include "../core/Definitions.hpp"
 #include "../core/Utilities.hpp"
+#include "./TreeClassifier.hpp"
 #include "../internal/_BaseClassifier.hpp"
 
 namespace CPPLearn
