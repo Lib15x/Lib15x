@@ -13,7 +13,7 @@ namespace CPPLearn
     template <class BaseModel = TreeClassifier<> >
     class BaggingClassifier : public _BaseClassifier<BaggingClassifier<BaseModel> > {
     public:
-      using BaseClassifier = _BaseClassifier<BaggingClassifier<BaseModel> >;
+      using BaseClassifier = _BaseClassifier<BaggingClassifier>;
       using BaseClassifier::train;
       static constexpr const char* ModelName="BaggingClassifier";
       static constexpr double (*LossFunction)(const Labels&, const Labels&) =
@@ -22,22 +22,21 @@ namespace CPPLearn
       template<typename... Args>
       BaggingClassifier(const long numberOfFeatures, const long numberOfClasses,
                         const long numberOfBaseModels, const Args... args) :
-        BaseClassifier{numberOfFeatures, numberOfClasses},
-        _numberOfBaseModels{numberOfBaseModels}
+        BaseClassifier{numberOfFeatures, numberOfClasses}
       {
         static_assert(BaseModel::ModelType == BaseClassifier::ModelType,
                       "modelType should be classification");
 
-        _models.reserve(static_cast<unsigned>(_numberOfBaseModels));
+        _models.reserve(static_cast<unsigned>(numberOfBaseModels));
 
-        for (long modelCount = 0; modelCount < _numberOfBaseModels; ++modelCount)
+        for (long modelCount = 0; modelCount < numberOfBaseModels; ++modelCount)
           _models.emplace_back(numberOfFeatures, numberOfClasses, args...);
       }
 
       BaggingClassifier(const long numberOfFeatures, const long numberOfClasses,
                         const long numberOfBaseModels, const BaseModel& baseModel) :
         BaseClassifier{numberOfFeatures, numberOfClasses},
-        _numberOfBaseModels{numberOfBaseModels}, _models{_numberOfBaseModels, baseModel}
+        _models{numberOfBaseModels, baseModel}
       {
         static_assert(BaseModel::ModelType == BaseClassifier::ModelType,
                       "modelType should be classification");
@@ -48,7 +47,7 @@ namespace CPPLearn
             const vector<long>& trainIndices)
       {
         long numberOfData = trainIndices.size();
-        for (long modelId=0; modelId<_numberOfBaseModels; ++modelId) {
+        for (auto& model : _models) {
           vector<long> sampleIndicesForThisModel;
           sampleIndicesForThisModel.reserve(numberOfData);
           for (long dataId = 0; dataId<numberOfData; ++dataId){
@@ -56,11 +55,11 @@ namespace CPPLearn
             sampleIndicesForThisModel.push_back(trainIndices[randomIndex]);
           }
           try {
-            _models[modelId].train(trainData, trainLabels, sampleIndicesForThisModel);
+            model.train(trainData, trainLabels, sampleIndicesForThisModel);
           }
           catch(...) {
             cout<<"Error happened when training bagging classifier, with base model Id ="
-                <<modelId<<endl;
+                <<&model-&_models[0]<<endl;
             throw;
           }
         }
@@ -71,8 +70,8 @@ namespace CPPLearn
       double predictOne(const VectorXd& instance) const
       {
         vector<long> predictedLabelsCount(BaseClassifier::_numberOfClasses, 0);
-        for (long modelId = 0; modelId<_numberOfBaseModels; ++modelId){
-          double predictedLabel = _models[modelId].predictOne(instance);
+        for (const auto& model : _models) {
+          double predictedLabel = model.predictOne(instance);
           ++predictedLabelsCount[static_cast<long>(predictedLabel)];
         }
 
@@ -89,7 +88,6 @@ namespace CPPLearn
       }
 
     private:
-      long _numberOfBaseModels;
       vector<BaseModel> _models;
     };
   }

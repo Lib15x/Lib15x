@@ -1,10 +1,9 @@
 #include <core/Definitions.hpp>
 #include <core/Utilities.hpp>
-#include <models/TreeClassifier.hpp>
-#include <models/BaggingClassifier.hpp>
+#include <models/RandomForestClassifier.hpp>
 
 using namespace CPPLearn;
-using LearningModel=Models::BaggingClassifier<>;
+using LearningModel=Models::RandomForestClassifier<>;
 
 int main(int argc, char* argv[])
 {
@@ -27,7 +26,6 @@ int main(int argc, char* argv[])
 
   double loss=LossFunction(predictedLabels, trainLabels);
   cout<<"classification error on training set = "<<loss<<endl;
-  //cout<<predictedLabels._labelData<<endl;
 
   return 0;
 }

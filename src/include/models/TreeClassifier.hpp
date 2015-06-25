@@ -28,7 +28,8 @@ namespace CPPLearn
                      const long maxNumberOfLeafNodes=-1) :
         BaseClassifier{numberOfFeatures, numberOfClasses},
         _minSamplesInALeaf{minSamplesInALeaf}, _minSamplesInANode{minSamplesInANode},
-        _maxDepth{maxDepth}, _maxNumberOfLeafNodes{maxNumberOfLeafNodes}
+        _maxDepth{maxDepth}, _maxNumberOfLeafNodes{maxNumberOfLeafNodes},
+        _numberOfFeaturesToSplit{numberOfFeatures}
       {
         if (_minSamplesInALeaf <= 0 ||
             _minSamplesInANode <= 0 ||
@@ -59,6 +60,7 @@ namespace CPPLearn
           _DepthFirstBuilder<Criterion> builder(_minSamplesInALeaf,
                                                 _minSamplesInANode,
                                                 _maxDepth,
+                                                _numberOfFeaturesToSplit,
                                                 &criterion);
           try {
             builder.build(trainData, labelData, &_tree, &trainIndices);
@@ -73,6 +75,7 @@ namespace CPPLearn
                                                _minSamplesInANode,
                                                _maxDepth,
                                                _maxNumberOfLeafNodes,
+                                               _numberOfFeaturesToSplit,
                                                &criterion);
           try {
             builder.build(trainData, labelData, &_tree, &trainIndices);
@@ -99,6 +102,11 @@ namespace CPPLearn
         return static_cast<double>(label);
       }
 
+      long&
+      setNumberOfRandomFeauturesToSplit() {
+        return _numberOfFeaturesToSplit;
+      }
+
       void
       _clearModel()
       {
@@ -110,6 +118,7 @@ namespace CPPLearn
       long _minSamplesInANode;
       long _maxDepth;
       long _maxNumberOfLeafNodes;
+      long _numberOfFeaturesToSplit;
       _Tree _tree;
     };
   }

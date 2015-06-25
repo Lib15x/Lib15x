@@ -10,10 +10,12 @@ namespace CPPLearn {
   class _Splitter {
   public:
     _Splitter(const MatrixXd* trainData, const VectorXd* labelData,
-              _Criterion* criterion, long minSamplesInALeaf,
+              _Criterion* criterion, const long minSamplesInALeaf,
+              const long numberOfFeaturesToSplit,
               vector<long>* sampleIndices) :
       _trainData{trainData}, _labelData{labelData},
       _criterion{criterion}, _minSamplesInALeaf{minSamplesInALeaf},
+      _numberOfFeaturesToSplit{numberOfFeaturesToSplit},
       _totalNumberOfSamples{_trainData->rows()}, _numberOfFeatures{_trainData->cols()},
       _sampleIndices{sampleIndices}, _featureIndices(_numberOfFeatures),
       _startIndex{-1}, _endIndex{-1}
@@ -37,8 +39,11 @@ namespace CPPLearn {
       long featIdI = _numberOfFeatures;
       long totalNumberOfConstantFeatures = *numberOfConstantFeatures;
       long numberOfSamplesInThisNode = _endIndex-_startIndex;
+      long numberOfVisitedFeatures = 0;
 
-      while (featIdI > totalNumberOfConstantFeatures) {
+      while (featIdI > totalNumberOfConstantFeatures &&
+             numberOfVisitedFeatures < _numberOfFeaturesToSplit) {
+        ++numberOfVisitedFeatures;
         long featIdJ =
           rand() % (featIdI-totalNumberOfConstantFeatures) + totalNumberOfConstantFeatures;
 
@@ -132,6 +137,7 @@ namespace CPPLearn {
     const VectorXd* _labelData;
     _Criterion* _criterion;
     long _minSamplesInALeaf;
+    long _numberOfFeaturesToSplit;
     long _totalNumberOfSamples;
     long _numberOfFeatures;
     vector<long>* _sampleIndices;
