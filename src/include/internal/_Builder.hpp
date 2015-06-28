@@ -2,7 +2,6 @@
 #define _BUILDER
 #include "../core/Definitions.hpp"
 #include "./_Splitter.hpp"
-#include "./_Tree.hpp"
 #include <stack>
 #include <queue>
 
@@ -20,12 +19,12 @@ namespace CPPLearn{
       _maxDepthAllowed{maxDepthAllowed}, _numberOfFeaturesToSplit{numberOfFeaturesToSplit},
       _criterion{criterion} { }
 
+    template<class Tree>
     void
-    build(const MatrixXd& trainData, const VectorXd& labelData,
-          _Tree* tree, vector<long>* sampleIndices)
+    build(const MatrixXd& trainData, Tree* tree, vector<long>* sampleIndices)
     {
       const long numberOfData = trainData.rows();
-      Splitter splitter(&trainData, &labelData, _criterion,
+      Splitter splitter(&trainData, _criterion,
                         _minSamplesInALeaf, _numberOfFeaturesToSplit, sampleIndices);
       std::stack<_StackRecord> recordStack;
       long maxDepthSoFar = -1;
@@ -66,8 +65,8 @@ namespace CPPLearn{
                                                     splitRecord._threshold);
 
         if (isLeaf) {
-          vector<long> labelsCountOfThisNode = splitter.nodeLabelsCount();
-          tree->addLeaf(currentNodeIndex, std::move(labelsCountOfThisNode));
+          auto leafValue = _criterion->nodeValue();
+          tree->addLeaf(currentNodeIndex, std::move(leafValue));
         }
         else {
           recordStack.emplace(splitRecord._splitSampleIndex, endIndex, nodeDepth + 1,
@@ -106,9 +105,9 @@ namespace CPPLearn{
       _maxDepthAllowed{maxDepthAllowed}, _maxNumberOfLeafNodes{maxNumberOfLeafNodes},
       _numberOfFeaturesToSplit{numberOfFeaturesToSplit}, _criterion{criterion} { }
 
+    template<class Tree>
     void
-    build(const MatrixXd& trainData, const VectorXd& labelData, _Tree* tree,
-             vector<long>* sampleIndices)
+    build(const MatrixXd& trainData, Tree* tree, vector<long>* sampleIndices)
     {
       auto compareRecord =
         [](const _PriorityQueueRecord& a, const _PriorityQueueRecord& b)
@@ -119,7 +118,7 @@ namespace CPPLearn{
 
       const long numberOfData = trainData.rows();
 
-      Splitter splitter(&trainData, &labelData, _criterion,
+      Splitter splitter(&trainData, _criterion,
                         _minSamplesInALeaf, _numberOfFeaturesToSplit, sampleIndices);
       splitter.resetToThisNode(0, numberOfData);
 
@@ -163,8 +162,9 @@ namespace CPPLearn{
       tree->_maxDepthOfThisTree = maxDepthSoFar;
     }
 
+    template<class Tree>
     _PriorityQueueRecord
-    _splitAndAddNode(_Tree* tree, Splitter* splitter,
+    _splitAndAddNode(Tree* tree, Splitter* splitter,
                      const long startIndex, const long endIndex,
                      const double impurity, const bool isLeft, const long parentNodeIndex,
                      const long nodeDepth)
@@ -191,8 +191,8 @@ namespace CPPLearn{
                                                   splitRecord._threshold);
 
       if (isLeaf) {
-        vector<long> labelsCountOfThisNode=splitter->nodeLabelsCount();
-        tree->addLeaf(currentNodeIndex, std::move(labelsCountOfThisNode));
+        auto leafValue = _criterion->nodeValue();
+        tree->addLeaf(currentNodeIndex, std::move(leafValue));
       }
 
       _PriorityQueueRecord record(currentNodeIndex, startIndex, endIndex,

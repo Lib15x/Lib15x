@@ -3,20 +3,18 @@
 #include "../core/Definitions.hpp"
 #include "../core/Utilities.hpp"
 #include "./_TreeUtilities.hpp"
-#include "./_Criterion.hpp"
 
 namespace CPPLearn {
   template<class _Criterion>
   class _Splitter {
   public:
-    _Splitter(const MatrixXd* trainData, const VectorXd* labelData,
-              _Criterion* criterion, const long minSamplesInALeaf,
-              const long numberOfFeaturesToSplit,
+    _Splitter(const MatrixXd* trainData, _Criterion* criterion,
+              const long minSamplesInALeaf, const long numberOfFeaturesToSplit,
               vector<long>* sampleIndices) :
-      _trainData{trainData}, _labelData{labelData},
+      _trainData{trainData},
       _criterion{criterion}, _minSamplesInALeaf{minSamplesInALeaf},
       _numberOfFeaturesToSplit{numberOfFeaturesToSplit},
-      _totalNumberOfSamples{_trainData->rows()}, _numberOfFeatures{_trainData->cols()},
+      _numberOfFeatures{_trainData->cols()},
       _sampleIndices{sampleIndices}, _featureIndices(_numberOfFeatures),
       _startIndex{-1}, _endIndex{-1}
     {
@@ -28,7 +26,7 @@ namespace CPPLearn {
     {
       _startIndex = startIndex;
       _endIndex = endIndex;
-      _criterion->init(_labelData, _sampleIndices, _startIndex, _endIndex);
+      _criterion->init(_sampleIndices, _startIndex, _endIndex);
     }
 
     _SplitRecord
@@ -122,11 +120,6 @@ namespace CPPLearn {
       return bestSplit;
     }
 
-    const vector<long>&
-    nodeLabelsCount() const {
-      return _criterion->nodeLabelsCount();
-    }
-
     double
     calculateNodeImpurity() {
       return _criterion->calculateNodeImpurity();
@@ -134,11 +127,9 @@ namespace CPPLearn {
 
   private:
     const MatrixXd* _trainData;
-    const VectorXd* _labelData;
     _Criterion* _criterion;
     long _minSamplesInALeaf;
     long _numberOfFeaturesToSplit;
-    long _totalNumberOfSamples;
     long _numberOfFeatures;
     vector<long>* _sampleIndices;
     vector<long> _featureIndices;

@@ -1,37 +1,36 @@
-#ifndef MODEL_TREE_CLASSIFIER
-#define MODEL_TREE_CLASSIFIER
+#ifndef MODEL_TREE_REGRESSOR
+#define MODEL_TREE_REGRESSOR
 
 #include "../core/Definitions.hpp"
 #include "../core/Utilities.hpp"
-#include "../internal/_BaseClassifier.hpp"
+#include "../internal/_BaseRegressor.hpp"
 #include "../internal/_Builder.hpp"
-#include "../internal/_ClassificationTree.hpp"
-#include "../internal/_ClassificationCriterion.hpp"
+#include "../internal/_RegressionTree.hpp"
+#include "../internal/_RegressionCriterion.hpp"
 
 namespace CPPLearn
 {
   namespace Models
   {
-    template<double (*ImpurityRule)(const vector<long>&) = gini>
-    class TreeClassifier : public _BaseClassifier<TreeClassifier<ImpurityRule> > {
+    class TreeRegressor : public _BaseRegressor<TreeRegressor> {
     public:
-      using BaseClassifier = _BaseClassifier<TreeClassifier<ImpurityRule> >;
-      using BaseClassifier::train;
-      static constexpr const char* ModelName = "TreeClassifier";
+      using BaseRegressor = _BaseRegressor<TreeRegressor>;
+      using BaseRegressor::train;
+      static constexpr const char* ModelName = "TreeRegressor";
       static constexpr double (*LossFunction)(const Labels&, const Labels&) =
-        BaseClassifier::LossFunction;
+        BaseRegressor::LossFunction;
 
-      using Criterion = _ClassificationCriterion<ImpurityRule>;
+      using Criterion = _RegressionCriterion;
 
-      TreeClassifier(const long numberOfFeatures, const long numberOfClasses,
-                     const long minSamplesInALeaf=1, const long minSamplesInANode=1,
-                     const long maxDepth=std::numeric_limits<long>::max(),
-                     const long maxNumberOfLeafNodes=-1) :
-        BaseClassifier{numberOfFeatures, numberOfClasses},
-        _minSamplesInALeaf{minSamplesInALeaf}, _minSamplesInANode{minSamplesInANode},
-        _maxDepth{maxDepth}, _maxNumberOfLeafNodes{maxNumberOfLeafNodes},
+      explicit TreeRegressor(const long numberOfFeatures,
+                             const long minSamplesInALeaf=1, const long minSamplesInANode=1,
+                             const long maxDepth=std::numeric_limits<long>::max(),
+                             const long maxNumberOfLeafNodes=-1) :
+        BaseRegressor{numberOfFeatures}, _minSamplesInALeaf{minSamplesInALeaf},
+        _minSamplesInANode{minSamplesInANode}, _maxDepth{maxDepth},
+        _maxNumberOfLeafNodes{maxNumberOfLeafNodes},
         _numberOfFeaturesToSplit{numberOfFeatures},
-        _tree{numberOfFeatures, numberOfClasses}
+        _tree{numberOfFeatures}
       {
         if (_minSamplesInALeaf <= 0 ||
             _minSamplesInANode <= 0 ||
@@ -53,7 +52,8 @@ namespace CPPLearn
             vector<long> trainIndices)
       {
         const VectorXd& labelData=trainLabels._labelData;
-        Criterion criterion{&labelData, BaseClassifier::_numberOfClasses};
+
+        Criterion criterion{&labelData};
 
         if (_maxNumberOfLeafNodes < 0) {
           _DepthFirstBuilder<Criterion> builder(_minSamplesInALeaf,
@@ -65,7 +65,7 @@ namespace CPPLearn
             builder.build(trainData, &_tree, &trainIndices);
           }
           catch (...) {
-            cout<<"exception caught when training tree classifier: "<<endl;
+            cout<<"exception caught when training tree regressor: "<<endl;
             throw;
           }
         }
@@ -80,24 +80,20 @@ namespace CPPLearn
             builder.build(trainData, &_tree, &trainIndices);
           }
           catch (...) {
-            cout<<"exception caught when training tree classifier: "<<endl;
+            cout<<"exception caught when training tree regressor: "<<endl;
             throw;
           }
         }
 
-        BaseClassifier::_modelTrained = true;
+        BaseRegressor::_modelTrained = true;
       }
 
       double
       predictOne(const VectorXd& instance) const
       {
-        assert(BaseClassifier::_modelTrained);
-        vector<long> labelsCount= _tree.predictOne(instance);
-        assert(static_cast<long>(labelsCount.size())==BaseClassifier::_numberOfClasses);
-        auto it=std::max_element(std::begin(labelsCount), std::end(labelsCount));
-        long label =(it-std::begin(labelsCount));
-
-        return static_cast<double>(label);
+        assert(BaseRegressor::_modelTrained);
+        double label = _tree.predictOne(instance);
+        return label;
       }
 
       long&
@@ -117,9 +113,9 @@ namespace CPPLearn
       long _maxDepth;
       long _maxNumberOfLeafNodes;
       long _numberOfFeaturesToSplit;
-      _ClassificationTree _tree;
+      _RegressionTree _tree;
     };
   }
 }
 
-#endif //MODEL_TREE_CLASSIFIER
+#endif //MODEL_TREE_REGRESSOR
