@@ -56,11 +56,11 @@ namespace CPPLearn
         Criterion criterion{&labelData};
 
         if (_maxNumberOfLeafNodes < 0) {
-          _DepthFirstBuilder<Criterion> builder(_minSamplesInALeaf,
-                                                _minSamplesInANode,
-                                                _maxDepth,
-                                                _numberOfFeaturesToSplit,
-                                                &criterion);
+          _DepthFirstBuilder<Criterion, _BestSplitter> builder(_minSamplesInALeaf,
+                                                               _minSamplesInANode,
+                                                               _maxDepth,
+                                                               _numberOfFeaturesToSplit,
+                                                               &criterion);
           try {
             builder.build(trainData, &_tree, &trainIndices);
           }
@@ -70,12 +70,12 @@ namespace CPPLearn
           }
         }
         else {
-          _BestFirstBuilder<Criterion> builder(_minSamplesInALeaf,
-                                               _minSamplesInANode,
-                                               _maxDepth,
-                                               _maxNumberOfLeafNodes,
-                                               _numberOfFeaturesToSplit,
-                                               &criterion);
+          _BestFirstBuilder<Criterion, _BestSplitter> builder(_minSamplesInALeaf,
+                                                              _minSamplesInANode,
+                                                              _maxDepth,
+                                                              _maxNumberOfLeafNodes,
+                                                              _numberOfFeaturesToSplit,
+                                                              &criterion);
           try {
             builder.build(trainData, &_tree, &trainIndices);
           }

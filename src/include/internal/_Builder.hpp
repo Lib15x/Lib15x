@@ -7,7 +7,7 @@
 
 namespace CPPLearn{
 
-  template<class _Criterion>
+  template<class _Criterion, template<class Criterion> class _Splitter>
   class _DepthFirstBuilder {
   public:
     using Splitter = _Splitter<_Criterion>;
@@ -93,7 +93,7 @@ namespace CPPLearn{
     double _minImpurity=1e-7;
   };
 
-  template<class _Criterion>
+  template<class _Criterion, template<class Criterion> class _Splitter>
   class _BestFirstBuilder {
   public:
     using Splitter= _Splitter<_Criterion>;
