@@ -58,64 +58,28 @@ namespace CPPLearn
             vector<long> trainIndices)
       {
         const VectorXd& labelData = trainLabels._labelData;
-        long numberOfData = labelData.size();
-        VectorXd yPre = VectorXd(trainData.size()); yPre.fill(0);
-        double mean = 0;
-        for (const auto& dataId : trainIndices)
-          mean += trainData(dataId);
-        mean /= static_cast<double>(numberOfData);
 
         Criterion criterion{&labelData};
 
-        for (const auto& dataId : trainIndices) {
-          if (yPre(dataId) != 0) {
-            throwException("data index repeated in GradientBoostingRegressor");
-          }
-          yPre(dataId) = mean;
-        }
 
         _RegressionCriterion _criterion(&labelData);
 
-        const long numberOfTrees = _trees.size();
-        for (long treeId=0; treeId<numberOfTrees; ++treeId) {
-          VectorXd residual = yPre;
-
-          if (_maxNumberOfLeafNodes < 0) {
-            _DepthFirstBuilder<Criterion, _PresortBestSplitter> builder(_minSamplesInALeaf,
-                                                                    _minSamplesInANode,
-                                                                    _maxDepth,
-                                                                    _numberOfFeaturesToSplit,
-                                                                    &criterion);
-            try {
-              builder.build(trainData, &_trees[treeId], &trainIndices);
-            }
-            catch (...) {
-              cout<<"exception caught when training tree regressor: "<<endl;
-              throw;
-            }
-          }
-          else {
-            _BestFirstBuilder<Criterion, _PresortBestSplitter> builder(_minSamplesInALeaf,
-                                                                   _minSamplesInANode,
-                                                                   _maxDepth,
-                                                                   _maxNumberOfLeafNodes,
-                                                                   _numberOfFeaturesToSplit,
-                                                                   &criterion);
-            try {
-              builder.build(trainData, &_trees[treeId], &trainIndices);
-            }
-            catch (...) {
-              cout<<"exception caught when training tree regressor: "<<endl;
-              throw;
-            }
-          }
-
-          for (auto& dataId : trainIndices) {
-            Map<const VectorXd> instance(&trainData(dataId, 0),
-                                         BaseRegressor::_numberOfFeatures);
-            double predictedValue=_trees[treeId].predictOne(instance);
-            yPre(dataId) += _learningRate*predictedValue;
-          }
+        if (_maxNumberOfLeafNodes < 0) {
+          _DepthFirstBuilder<Criterion, _PresortBestSplitter> builder(_minSamplesInALeaf,
+                                                                      _minSamplesInANode,
+                                                                      _maxDepth,
+                                                                      _numberOfFeaturesToSplit,
+                                                                      &criterion);
+          _buildTrees(&builder, trainData, labelData, std::move(trainIndices));
+        }
+        else {
+          _BestFirstBuilder<Criterion, _PresortBestSplitter> builder(_minSamplesInALeaf,
+                                                                     _minSamplesInANode,
+                                                                     _maxDepth,
+                                                                     _maxNumberOfLeafNodes,
+                                                                     _numberOfFeaturesToSplit,
+                                                                     &criterion);
+          _buildTrees(&builder, trainData, labelData, std::move(trainIndices));
         }
 
         BaseRegressor::_modelTrained = true;
@@ -142,15 +106,53 @@ namespace CPPLearn
       }
 
     private:
-      long _minSamplesInALeaf;
-      long _minSamplesInANode;
-      long _maxDepth;
-      long _maxNumberOfLeafNodes;
-      long _numberOfFeaturesToSplit;
-      vector<_RegressionTree> _trees;
-      double _learningRate = 1.0;
-    };
+      template<class BuilderType>
+      void _buildTrees (BuilderType* builder, const MatrixXd& trainData,
+                        const VectorXd& labelData, vector<long> trainIndices) {
+        long numberOfData = labelData.size();
+        VectorXd yPre = VectorXd(numberOfData); yPre.fill(0);
+        double mean = 0;
+        for (const auto& dataId : trainIndices)
+          mean += trainData(dataId);
+        mean /= static_cast<double>(numberOfData);
+
+        for (const auto& dataId : trainIndices) {
+          if (yPre(dataId) != 0) {
+            throwException("data index repeated in GradientBoostingRegressor");
+          }
+          yPre(dataId) = mean;
+        }
+
+        long numberOfTrees =  _trees.size();
+        for (long treeId=0; treeId<numberOfTrees; ++treeId) {
+          VectorXd residual = yPre;
+          try {
+            builder->build(trainData, &_trees[treeId], &trainIndices);
+          }
+          catch (...) {
+            cout<<"exception caught when training tree regressor: "<<endl;
+            throw;
+          }
+
+          for (auto& dataId : trainIndices) {
+            Map<const VectorXd> instance(&trainData(dataId, 0),
+                                         BaseRegressor::_numberOfFeatures);
+            double predictedValue=_trees[treeId].predictOne(instance);
+            yPre(dataId) += _learningRate*predictedValue;
+          }
+        }
+      }
+
+      private:
+        long _minSamplesInALeaf;
+        long _minSamplesInANode;
+        long _maxDepth;
+        long _maxNumberOfLeafNodes;
+        long _numberOfFeaturesToSplit;
+        vector<_RegressionTree> _trees;
+        double _learningRate = 1.0;
+      };
+    }
   }
-}
 
 #endif //MODEL_GRADIENT_BOOSTING_REGRESSOR
