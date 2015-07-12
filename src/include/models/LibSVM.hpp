@@ -38,10 +38,20 @@ namespace CPPLearn
         LibSVM{numberOfFeatures, numberOfClasses, C, Kernel{args...} } { }
 
       void
-      train(const MatrixXd& trainData, const Labels& trainLabels,
-            const vector<long>& trainIndices)
+      train(const MatrixXd& trainData, const Labels& trainLabels, const VectorXd& weights)
       {
         const VectorXd& labelData=trainLabels._labelData;
+        assert(weights.size()==labelData.size());
+        vector<long> trainIndices;
+        for (long dataId=0; dataId<labelData.size(); ++dataId){
+          long repeatance=static_cast<long>(weights(dataId));
+          if (static_cast<double>(repeatance) != weights(dataId)) {
+            throwException("Error happened in LibSVM class: LibSVM cannot handle general "
+                           "sample weights=%f", weights(dataId));
+          }
+          for (long rep=0; rep<repeatance; ++rep)
+            trainIndices.push_back(dataId);
+        }
         _numberOfTrainData = trainIndices.size();
 
         libsvm::svm_parameter svmParameter;

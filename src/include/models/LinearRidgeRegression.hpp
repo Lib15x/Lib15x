@@ -30,31 +30,39 @@ namespace CPPLearn
        *
        */
       void
-      train(const MatrixXd& trainData, const Labels& trainLabels,
-            const vector<long>& trainIndices)
+      train(const MatrixXd& trainData, const Labels& trainLabels, const VectorXd& weights)
       {
+        assert(weights.size()==trainData.rows());
+        const long numberOfData=trainData.rows();
         const long numberOfFeatures = BaseRegressor::_numberOfFeatures;
-        const long numberOfData=trainIndices.size();
         const VectorXd& labelData=trainLabels._labelData;
-        MatrixXd matrixC(numberOfFeatures, numberOfFeatures);
 
         long index=0;
-        if (trainData.rows() == numberOfData)
-          for (; index<numberOfData; ++index)
-            if(trainIndices[index] != index) break;
+        for (; index<numberOfData; ++index)
+          if(weights[index] != 1.0) break;
 
-        if (index != trainData.rows()) {
-          MatrixXd thisData(numberOfData, numberOfFeatures);
-          for (long dataId=0; dataId<numberOfData; ++dataId)
-            thisData.row(dataId)=trainData.row(trainIndices[dataId]);
-          matrixC = thisData.transpose()*thisData +
+        if (index == numberOfData) {
+          MatrixXd matrixC = trainData.transpose()*trainData +
             _regularizer*MatrixXd::Identity(_numberOfFeatures, _numberOfFeatures);
+
+          _parameters=matrixC.llt().solve(trainData.transpose()*labelData);
+          BaseRegressor::_modelTrained = true;
+          return;
         }
-        else
-          matrixC = trainData.transpose()*trainData +
-            _regularizer*MatrixXd::Identity(_numberOfFeatures, _numberOfFeatures);
 
-        _parameters=matrixC.llt().solve(trainData.transpose()*labelData);
+        MatrixXd weightedData(numberOfData, numberOfFeatures);
+        VectorXd weightedLabelData(numberOfData);
+
+        for (long dataId=0; dataId<numberOfData; ++dataId){
+          double sqtWeight=sqrt(weights(dataId));
+          weightedData.row(dataId) = sqtWeight*trainData.row(dataId);
+          weightedLabelData(dataId) = sqtWeight*labelData(dataId);
+        }
+
+        MatrixXd matrixC = weightedData.transpose()*weightedData +
+          _regularizer*MatrixXd::Identity(_numberOfFeatures, _numberOfFeatures);
+
+        _parameters=matrixC.llt().solve(trainData.transpose()*weightedLabelData);
 
         BaseRegressor::_modelTrained = true;
       }

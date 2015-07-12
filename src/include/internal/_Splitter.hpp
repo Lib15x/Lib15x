@@ -9,16 +9,16 @@ namespace CPPLearn {
   class _BestSplitter {
   public:
     _BestSplitter(const MatrixXd* trainData, _Criterion* criterion,
-              const long minSamplesInALeaf, const long numberOfFeaturesToSplit,
-              vector<long>* sampleIndices) :
+                  const long minSamplesInALeaf, const long numberOfFeaturesToSplit) :
       _trainData{trainData},
       _criterion{criterion}, _minSamplesInALeaf{minSamplesInALeaf},
       _numberOfFeaturesToSplit{numberOfFeaturesToSplit},
       _numberOfFeatures{_trainData->cols()},
-      _sampleIndices{sampleIndices}, _featureIndices(_numberOfFeatures),
+      _sampleIndices(trainData->rows()), _featureIndices(_numberOfFeatures),
       _startIndex{-1}, _endIndex{-1}
     {
       std::iota(std::begin(_featureIndices), std::end(_featureIndices),0);
+      std::iota(std::begin(_sampleIndices), std::end(_sampleIndices),0);
     }
 
     void
@@ -26,7 +26,7 @@ namespace CPPLearn {
     {
       _startIndex = startIndex;
       _endIndex = endIndex;
-      _criterion->init(_sampleIndices, _startIndex, _endIndex);
+      _criterion->init(&_sampleIndices, _startIndex, _endIndex);
     }
 
     _SplitRecord
@@ -50,12 +50,12 @@ namespace CPPLearn {
         vector<double> dataBuffer(numberOfSamplesInThisNode);
 
         for (long sampleId = 0; sampleId < numberOfSamplesInThisNode; ++sampleId) {
-          long dataIndex=(*_sampleIndices)[sampleId+_startIndex];
+          long dataIndex=_sampleIndices[sampleId+_startIndex];
           dataBuffer[sampleId] = (*_trainData)(dataIndex, currentSplit._featureIndexToSplit);
         }
 
         Utilities::sortTwoArray(std::begin(dataBuffer), std::end(dataBuffer),
-                                std::begin(*_sampleIndices)+_startIndex);
+                                std::begin(_sampleIndices)+_startIndex);
 
         if (dataBuffer[numberOfSamplesInThisNode - 1] <= dataBuffer[0] + _featureThreshold) {
           _featureIndices[featIdJ] = _featureIndices[totalNumberOfConstantFeatures];
@@ -93,7 +93,7 @@ namespace CPPLearn {
 
           if (currentSplit._impurityImprovement > bestSplit._impurityImprovement) {
             _criterion->calculateChildrenImpurity(&currentSplit._impurityLeft,
-                                                 &currentSplit._impurityRight);
+                                                  &currentSplit._impurityRight);
             currentSplit._threshold = (dataBuffer[sampleId - 1-_startIndex] +
                                        dataBuffer[sampleId-_startIndex]) / 2.0;
             bestSplit = currentSplit;
@@ -106,13 +106,13 @@ namespace CPPLearn {
         long sampleId = _startIndex;
         long featId = bestSplit._featureIndexToSplit;
         while (sampleId < partitionEnd){
-          long dataId = (*_sampleIndices)[sampleId];
+          long dataId = _sampleIndices[sampleId];
           if ((*_trainData)(dataId, featId) <= bestSplit._threshold) {
             ++sampleId;
             continue;
           }
           --partitionEnd;
-          std::swap((*_sampleIndices)[partitionEnd], (*_sampleIndices)[sampleId]);
+          std::swap(_sampleIndices[partitionEnd], _sampleIndices[sampleId]);
         }
       }
 
@@ -131,7 +131,7 @@ namespace CPPLearn {
     long _minSamplesInALeaf;
     long _numberOfFeaturesToSplit;
     long _numberOfFeatures;
-    vector<long>* _sampleIndices;
+    vector<long> _sampleIndices;
     vector<long> _featureIndices;
     long _startIndex;
     long _endIndex;
@@ -142,16 +142,14 @@ namespace CPPLearn {
   class _PresortBestSplitter {
   public:
     _PresortBestSplitter(const MatrixXd* trainData, _Criterion* criterion,
-                     const long minSamplesInALeaf, const long numberOfFeaturesToSplit,
-                     vector<long>* sampleIndices) :
-      _trainData{trainData},
-      _criterion{criterion}, _minSamplesInALeaf{minSamplesInALeaf},
+                         const long minSamplesInALeaf, const long numberOfFeaturesToSplit) :
+      _trainData{trainData}, _criterion{criterion}, _minSamplesInALeaf{minSamplesInALeaf},
       _numberOfFeaturesToSplit{numberOfFeaturesToSplit},
-      _numberOfFeatures{_trainData->cols()},
-      _sampleIndices{sampleIndices}, _featureIndices(_numberOfFeatures),
-      _startIndex{-1}, _endIndex{-1}
+      _numberOfFeatures{_trainData->cols()}, _sampleIndices(trainData->rows()),
+      _featureIndices(_numberOfFeatures), _startIndex{-1}, _endIndex{-1}
     {
       std::iota(std::begin(_featureIndices), std::end(_featureIndices),0);
+      std::iota(std::begin(_sampleIndices), std::end(_sampleIndices),0);
     }
 
     void
@@ -159,7 +157,7 @@ namespace CPPLearn {
     {
       _startIndex = startIndex;
       _endIndex = endIndex;
-      _criterion->init(_sampleIndices, _startIndex, _endIndex);
+      _criterion->init(&_sampleIndices, _startIndex, _endIndex);
     }
 
     _SplitRecord
@@ -183,12 +181,12 @@ namespace CPPLearn {
         vector<double> dataBuffer(numberOfSamplesInThisNode);
 
         for (long sampleId = 0; sampleId < numberOfSamplesInThisNode; ++sampleId) {
-          long dataIndex=(*_sampleIndices)[sampleId+_startIndex];
+          long dataIndex=_sampleIndices[sampleId+_startIndex];
           dataBuffer[sampleId] = (*_trainData)(dataIndex, currentSplit._featureIndexToSplit);
         }
 
         Utilities::sortTwoArray(std::begin(dataBuffer), std::end(dataBuffer),
-                                std::begin(*_sampleIndices)+_startIndex);
+                                std::begin(_sampleIndices)+_startIndex);
 
         if (dataBuffer[numberOfSamplesInThisNode - 1] <= dataBuffer[0] + _featureThreshold) {
           _featureIndices[featIdJ] = _featureIndices[totalNumberOfConstantFeatures];
@@ -226,7 +224,7 @@ namespace CPPLearn {
 
           if (currentSplit._impurityImprovement > bestSplit._impurityImprovement) {
             _criterion->calculateChildrenImpurity(&currentSplit._impurityLeft,
-                                                 &currentSplit._impurityRight);
+                                                  &currentSplit._impurityRight);
             currentSplit._threshold = (dataBuffer[sampleId - 1-_startIndex] +
                                        dataBuffer[sampleId-_startIndex]) / 2.0;
             bestSplit = currentSplit;
@@ -239,13 +237,13 @@ namespace CPPLearn {
         long sampleId = _startIndex;
         long featId = bestSplit._featureIndexToSplit;
         while (sampleId < partitionEnd){
-          long dataId = (*_sampleIndices)[sampleId];
+          long dataId = _sampleIndices[sampleId];
           if ((*_trainData)(dataId, featId) <= bestSplit._threshold) {
             ++sampleId;
             continue;
           }
           --partitionEnd;
-          std::swap((*_sampleIndices)[partitionEnd], (*_sampleIndices)[sampleId]);
+          std::swap(_sampleIndices[partitionEnd], _sampleIndices[sampleId]);
         }
       }
 
@@ -264,7 +262,7 @@ namespace CPPLearn {
     long _minSamplesInALeaf;
     long _numberOfFeaturesToSplit;
     long _numberOfFeatures;
-    vector<long>* _sampleIndices;
+    vector<long> _sampleIndices;
     vector<long> _featureIndices;
     long _startIndex;
     long _endIndex;

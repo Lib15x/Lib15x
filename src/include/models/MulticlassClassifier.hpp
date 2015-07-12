@@ -56,15 +56,17 @@ namespace CPPLearn
 
 
       void
-      train(const MatrixXd& trainData, const Labels& trainLabels,
-            const vector<long>& trainIndices)
+      train(const MatrixXd& trainData, const Labels& trainLabels, const VectorXd& weights)
       {
+        assert(weights.size()==trainLabels.size());
+        long numberOfData=trainLabels.size();
         const long numberOfClasses = BaseClassifier::_numberOfClasses;
         const VectorXd& labelData=trainLabels._labelData;
 
         vector<long> labelsCount(numberOfClasses, 0);
-        for (auto sampleId : trainIndices)
-          ++labelsCount[static_cast<long>(labelData(sampleId))];
+        for (auto dataId=0; dataId<numberOfData; ++dataId)
+          if (weights(dataId)!=0)
+            ++labelsCount[static_cast<long>(labelData(dataId))];
 
         for (long classIndex=0; classIndex<numberOfClasses; ++classIndex)
           if (labelsCount[classIndex] == 0){
@@ -77,25 +79,22 @@ namespace CPPLearn
         long modelCount=0;
         for (long firstIndex=0; firstIndex<numberOfClasses-1; ++firstIndex)
           for (long secondIndex = firstIndex+1; secondIndex<numberOfClasses; ++secondIndex) {
-            long numberOfDataForThisRound = labelsCount[firstIndex] + labelsCount[secondIndex];
             Labels binaryLabels{BinaryClassifier::ModelType};
             binaryLabels._labelData.resize(trainData.rows());
-            vector<long> indicesForThisRound;
-            indicesForThisRound.reserve(numberOfDataForThisRound);
-            for (auto sampleId : trainIndices){
-              if (labelData(sampleId) == firstIndex){
-                binaryLabels._labelData(sampleId)=0.0;
-                indicesForThisRound.push_back(sampleId);
+            VectorXd weightsForThisRound(numberOfData); weightsForThisRound.fill(0);
+            for (long dataId=0; dataId<numberOfData; ++dataId) {
+              if (labelData(dataId) == firstIndex){
+                binaryLabels._labelData(dataId)=0.0;
+                weightsForThisRound(dataId)=weights(dataId);
                 continue;
               }
-              if (labelData(sampleId)==secondIndex){
-                binaryLabels._labelData(sampleId)=1;
-                indicesForThisRound.push_back(sampleId);
+              if (labelData(dataId)==secondIndex){
+                binaryLabels._labelData(dataId)=1;
+                weightsForThisRound(dataId)=weights(dataId);
                 continue;
               }
             }
-            assert(static_cast<long>(indicesForThisRound.size()) == numberOfDataForThisRound);
-            _binaryModels[modelCount].train(trainData, binaryLabels, indicesForThisRound);
+            _binaryModels[modelCount].train(trainData, binaryLabels, weightsForThisRound);
             ++modelCount;
           }
 

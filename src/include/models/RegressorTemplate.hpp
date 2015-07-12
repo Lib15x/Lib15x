@@ -30,8 +30,7 @@ namespace CPPLearn
        *
        */
       void
-      train(const MatrixXd& trainData, const Labels& trainLabels,
-            const vector<long>& trainIndices)
+      train(const MatrixXd& trainData, const Labels& trainLabels, const VectorXd weights)
       {
         BaseRegressor::_modelTrained = true;
       }

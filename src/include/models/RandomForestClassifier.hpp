@@ -61,19 +61,18 @@ namespace CPPLearn
       }
 
       void
-      train(const MatrixXd& trainData, const Labels& trainLabels,
-            const vector<long>& trainIndices)
+      train(const MatrixXd& trainData, const Labels& trainLabels, const VectorXd& weights)
       {
-        const long numberOfData = trainIndices.size();
+        assert(weights.size()==trainLabels.size());
+        long numberOfData = trainLabels.size();
         for (auto& tree : _trees) {
-          vector<long> sampleIndicesForThisModel;
-          sampleIndicesForThisModel.reserve(numberOfData);
+          VectorXd weightsForThisModel(numberOfData); weightsForThisModel.fill(0);
           for (long dataId = 0; dataId<numberOfData; ++dataId){
             long randomIndex=rand() % numberOfData;
-            sampleIndicesForThisModel.push_back(trainIndices[randomIndex]);
+            weightsForThisModel(randomIndex) += weights(randomIndex);
           }
           try {
-            tree.train(trainData, trainLabels, sampleIndicesForThisModel);
+            tree.train(trainData, trainLabels, weightsForThisModel);
           }
           catch(...) {
             cout<<"Error happened when training  RandomForestClassifier, with tree Id ="

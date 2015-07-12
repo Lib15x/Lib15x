@@ -21,9 +21,9 @@ namespace CPPLearn
         BaseClassifier{numberOfFeatures, numberOfClasses} { }
 
       void
-      train(const MatrixXd& trainData, const Labels& trainLabels,
-            vector<long> trainIndices)
+      train(const MatrixXd& trainData, const Labels& trainLabels, const VectorXd& weights)
       {
+        assert(weights.size()==trainLabels.size());
         BaseClassifier::_modelTrained = true;
       }
 

@@ -43,19 +43,18 @@ namespace CPPLearn
       }
 
       void
-      train(const MatrixXd& trainData, const Labels& trainLabels,
-            const vector<long>& trainIndices)
+      train(const MatrixXd& trainData, const Labels& trainLabels, const VectorXd& weights)
       {
-        long numberOfData = trainIndices.size();
+        assert(weights.size()==trainLabels.size());
+        long numberOfData = trainLabels.size();
         for (auto& model : _models) {
-          vector<long> sampleIndicesForThisModel;
-          sampleIndicesForThisModel.reserve(numberOfData);
+          VectorXd weightsForThisModel(numberOfData); weightsForThisModel.fill(0);
           for (long dataId = 0; dataId<numberOfData; ++dataId){
             long randomIndex=rand() % numberOfData;
-            sampleIndicesForThisModel.push_back(trainIndices[randomIndex]);
+            weightsForThisModel(randomIndex) += weights(randomIndex);
           }
           try {
-            model.train(trainData, trainLabels, sampleIndicesForThisModel);
+            model.train(trainData, trainLabels, weightsForThisModel);
           }
           catch(...) {
             cout<<"Error happened when training bagging classifier, with base model Id ="

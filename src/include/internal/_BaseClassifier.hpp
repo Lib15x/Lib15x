@@ -103,10 +103,9 @@ namespace CPPLearn
             cout<<"number of training data labeled "<<classIndex<<": "<<
               labelsCount[classIndex]<<endl;
         }
-        vector<long> indicesForAllTrainData(trainData.rows());
-        std::iota(std::begin(indicesForAllTrainData), std::end(indicesForAllTrainData), 0);
-        static_cast<DerivedClassifier*>(this)->train(trainData, trainLabels,
-                                                     std::move(indicesForAllTrainData));
+
+        VectorXd balancedWeights(trainData.rows()); balancedWeights.fill(1.0);
+        static_cast<DerivedClassifier*>(this)->train(trainData, trainLabels, balancedWeights);
       }
 
       Labels

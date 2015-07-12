@@ -65,6 +65,10 @@ namespace CPPLearn
                        "Type of label mush be either Classification or Regression");
       }
     }
+
+    long size() const {
+      return _labelData.size();
+    }
   };
 }
 

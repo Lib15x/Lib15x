@@ -95,7 +95,6 @@ namespace CPPLearn
 
       double (*const LossFunction)(const Labels&, const Labels&)=LearningModel::LossFunction;
       VectorXd losses{_numberOfFolds}; losses.fill(0);
-      //const long numberOfFeatures=_data.cols();
       const long numberOfData=_data->rows();
 
       for (long currentRoundId =0; currentRoundId<_numberOfFolds; ++currentRoundId) {
@@ -103,25 +102,15 @@ namespace CPPLearn
         const long numberOfTestsOfThisFold = static_cast<long>(testIndicesOfThisFold.size());
         const long numberOfTrainsOfThisFold=numberOfData-numberOfTestsOfThisFold;
 
-        vector<long> trainIndicesOfThisFold(numberOfData, 0);
-        std::iota(std::begin(trainIndicesOfThisFold), std::end(trainIndicesOfThisFold), 0);
+        VectorXd trainWeights(numberOfData); trainWeights.fill(1.0);
 
-        auto testFoldIter = std::begin(testIndicesOfThisFold);
+        for (auto testIndex : testIndicesOfThisFold)
+          trainWeights(testIndex)=0.0;
 
-        auto endIter =
-          remove_if(std::begin(trainIndicesOfThisFold),
-                    std::end(trainIndicesOfThisFold),
-                    [&testFoldIter, &testIndicesOfThisFold](long index){
-                      if (testFoldIter == std::end(testIndicesOfThisFold)) return false;
-                      if (index != *testFoldIter) return false;
-                      ++testFoldIter; return true;});
-
-        trainIndicesOfThisFold.erase(endIter, std::end(trainIndicesOfThisFold));
-
-        assert(static_cast<long>(trainIndicesOfThisFold.size()) == numberOfTrainsOfThisFold);
+        assert(static_cast<long>(trainWeights.sum()) == numberOfTrainsOfThisFold);
 
         try {
-          learningModel->train(*_data, *_labels, trainIndicesOfThisFold);
+          learningModel->train(*_data, *_labels, trainWeights);
           Labels predictedLabels = learningModel->predict(*_data, testIndicesOfThisFold);
           losses(currentRoundId)=
             LossFunction(predictedLabels, *_labels)/

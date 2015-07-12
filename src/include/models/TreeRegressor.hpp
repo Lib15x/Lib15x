@@ -48,8 +48,7 @@ namespace CPPLearn
       }
 
       void
-      train(const MatrixXd& trainData, const Labels& trainLabels,
-            vector<long> trainIndices)
+      train(const MatrixXd& trainData, const Labels& trainLabels, const VectorXd& weights)
       {
         const VectorXd& labelData=trainLabels._labelData;
 
@@ -62,7 +61,7 @@ namespace CPPLearn
                                                                _numberOfFeaturesToSplit,
                                                                &criterion);
           try {
-            builder.build(trainData, &_tree, &trainIndices);
+            builder.build(trainData, &_tree);
           }
           catch (...) {
             cout<<"exception caught when training tree regressor: "<<endl;
@@ -77,7 +76,7 @@ namespace CPPLearn
                                                               _numberOfFeaturesToSplit,
                                                               &criterion);
           try {
-            builder.build(trainData, &_tree, &trainIndices);
+            builder.build(trainData, &_tree);
           }
           catch (...) {
             cout<<"exception caught when training tree regressor: "<<endl;

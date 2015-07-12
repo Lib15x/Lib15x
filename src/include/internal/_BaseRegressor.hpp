@@ -73,10 +73,8 @@ namespace CPPLearn
                          trainData.rows(), labelData.size());
         }
 
-        vector<long> indicesForAllTrainData(trainData.rows());
-        std::iota(std::begin(indicesForAllTrainData), std::end(indicesForAllTrainData), 0);
-        static_cast<DerivedRegressor*>(this)->train(trainData, trainLabels,
-                                                    std::move(indicesForAllTrainData));
+        VectorXd balancedWeights(trainData.rows()); balancedWeights.fill(1.0);
+        static_cast<DerivedRegressor*>(this)->train(trainData, trainLabels, balancedWeights);
       }
 
       Labels
