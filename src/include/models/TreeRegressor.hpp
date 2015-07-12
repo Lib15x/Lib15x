@@ -29,7 +29,6 @@ namespace CPPLearn
         BaseRegressor{numberOfFeatures}, _minSamplesInALeaf{minSamplesInALeaf},
         _minSamplesInANode{minSamplesInANode}, _maxDepth{maxDepth},
         _maxNumberOfLeafNodes{maxNumberOfLeafNodes},
-        _numberOfFeaturesToSplit{numberOfFeatures},
         _tree{numberOfFeatures}
       {
         if (_minSamplesInALeaf <= 0 ||
@@ -51,6 +50,18 @@ namespace CPPLearn
       train(const MatrixXd& trainData, const Labels& trainLabels, const VectorXd& weights)
       {
         const VectorXd& labelData=trainLabels._labelData;
+        assert(weights.size()==labelData.size());
+
+        vector<long> trainIndices;
+        for (long dataId=0; dataId<labelData.size(); ++dataId){
+          long repeatance=static_cast<long>(weights(dataId));
+          if (static_cast<double>(repeatance) != weights(dataId)) {
+            throwException("Error happened in TreeRegressor model: cannot handle general "
+                           "sample weights=%f", weights(dataId));
+          }
+          for (long rep=0; rep<repeatance; ++rep)
+            trainIndices.push_back(dataId);
+        }
 
         Criterion criterion{&labelData};
 
@@ -58,10 +69,10 @@ namespace CPPLearn
           _DepthFirstBuilder<Criterion, _BestSplitter> builder(_minSamplesInALeaf,
                                                                _minSamplesInANode,
                                                                _maxDepth,
-                                                               _numberOfFeaturesToSplit,
+                                                               BaseRegressor::_numberOfFeatures,
                                                                &criterion);
           try {
-            builder.build(trainData, &_tree);
+            builder.build(trainData, &_tree, &trainIndices);
           }
           catch (...) {
             cout<<"exception caught when training tree regressor: "<<endl;
@@ -73,10 +84,10 @@ namespace CPPLearn
                                                               _minSamplesInANode,
                                                               _maxDepth,
                                                               _maxNumberOfLeafNodes,
-                                                              _numberOfFeaturesToSplit,
+                                                              BaseRegressor::_numberOfFeatures,
                                                               &criterion);
           try {
-            builder.build(trainData, &_tree);
+            builder.build(trainData, &_tree, &trainIndices);
           }
           catch (...) {
             cout<<"exception caught when training tree regressor: "<<endl;
@@ -95,11 +106,6 @@ namespace CPPLearn
         return label;
       }
 
-      long&
-      setNumberOfRandomFeauturesToSplit() {
-        return _numberOfFeaturesToSplit;
-      }
-
       void
       _clearModel()
       {
@@ -111,7 +117,6 @@ namespace CPPLearn
       long _minSamplesInANode;
       long _maxDepth;
       long _maxNumberOfLeafNodes;
-      long _numberOfFeaturesToSplit;
       _RegressionTree _tree;
     };
   }

@@ -21,10 +21,11 @@ namespace CPPLearn{
 
     template<class Tree>
     void
-    build(const MatrixXd& trainData, Tree* tree)
+    build(const MatrixXd& trainData, Tree* tree, vector<long>* sampleIndices)
     {
       const long numberOfData = trainData.rows();
-      Splitter splitter(&trainData, _criterion, _minSamplesInALeaf, _numberOfFeaturesToSplit);
+      Splitter splitter(&trainData, _criterion,
+                        _minSamplesInALeaf, _numberOfFeaturesToSplit, sampleIndices);
       std::stack<_StackRecord> recordStack;
       long maxDepthSoFar = -1;
       recordStack.emplace(0, numberOfData, 0, false, std::numeric_limits<double>::max(), 0, -1);
@@ -105,7 +106,7 @@ namespace CPPLearn{
 
     template<class Tree>
     void
-    build(const MatrixXd& trainData, Tree* tree)
+    build(const MatrixXd& trainData, Tree* tree, vector<long>* sampleIndices)
     {
       auto compareRecord =
         [](const _PriorityQueueRecord& a, const _PriorityQueueRecord& b)
@@ -116,7 +117,8 @@ namespace CPPLearn{
 
       const long numberOfData = trainData.rows();
 
-      Splitter splitter(&trainData, _criterion, _minSamplesInALeaf, _numberOfFeaturesToSplit);
+      Splitter splitter(&trainData, _criterion,
+                        _minSamplesInALeaf, _numberOfFeaturesToSplit, sampleIndices);
       splitter.resetToThisNode(0, numberOfData);
 
       PriorityQueue recordQueue(compareRecord);

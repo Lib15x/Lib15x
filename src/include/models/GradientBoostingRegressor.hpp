@@ -22,12 +22,12 @@ namespace CPPLearn
 
       using Criterion = _RegressionCriterion;
 
-      explicit GradientBoostingRegressor(const long numberOfFeatures,
-                                         const long numberOfTrees,
-                                         const long minSamplesInALeaf=1,
-                                         const long minSamplesInANode=1,
-                                         const long maxDepth=std::numeric_limits<long>::max(),
-                                         const long maxNumberOfLeafNodes=-1) :
+      GradientBoostingRegressor(const long numberOfFeatures,
+                                const long numberOfTrees,
+                                const long minSamplesInALeaf=1,
+                                const long minSamplesInANode=1,
+                                const long maxDepth=std::numeric_limits<long>::max(),
+                                const long maxNumberOfLeafNodes=-1) :
         BaseRegressor{numberOfFeatures}, _minSamplesInALeaf{minSamplesInALeaf},
         _minSamplesInANode{minSamplesInANode}, _maxDepth{maxDepth},
         _maxNumberOfLeafNodes{maxNumberOfLeafNodes},
@@ -57,9 +57,9 @@ namespace CPPLearn
       train(const MatrixXd& trainData, const Labels& trainLabels, const VectorXd& weights)
       {
         const VectorXd& labelData = trainLabels._labelData;
+        assert(weights.size()==trainLabels.size());
 
         Criterion criterion{&labelData};
-
 
         _RegressionCriterion _criterion(&labelData);
 
@@ -116,11 +116,22 @@ namespace CPPLearn
         mean /= weights.sum();
         yPre.fill(mean);
 
+        vector<long> trainIndices;
+        for (long dataId=0; dataId<labelData.size(); ++dataId){
+          long repeatance=static_cast<long>(weights(dataId));
+          if (static_cast<double>(repeatance) != weights(dataId)) {
+            throwException("Error happened in TreeRegressor model: cannot handle general "
+                           "sample weights=%f", weights(dataId));
+          }
+          for (long rep=0; rep<repeatance; ++rep)
+            trainIndices.push_back(dataId);
+        }
+
         long numberOfTrees =  _trees.size();
         for (long treeId=0; treeId<numberOfTrees; ++treeId) {
           VectorXd residual = yPre;
           try {
-            builder->build(trainData, &_trees[treeId]);
+            builder->build(trainData, &_trees[treeId], &trainIndices);
           }
           catch (...) {
             cout<<"exception caught when training tree regressor: "<<endl;
@@ -130,7 +141,7 @@ namespace CPPLearn
           for (long dataId=0; dataId<numberOfData; ++dataId) {
             Map<const VectorXd> instance(&trainData(dataId, 0),
                                          BaseRegressor::_numberOfFeatures);
-            double predictedValue=_trees[treeId].predictOne(instance);
+            double predictedValue = _trees[treeId].predictOne(instance);
             yPre(dataId) += _learningRate*predictedValue;
           }
         }
