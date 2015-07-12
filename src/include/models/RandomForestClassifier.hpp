@@ -131,12 +131,13 @@ namespace CPPLearn
                         const VectorXd& labelData, const VectorXd& weights) {
         vector<long> trainIndices;
         for (long dataId=0; dataId<labelData.size(); ++dataId){
-          long repeatance=static_cast<long>(weights(dataId));
-          if (static_cast<double>(repeatance) != weights(dataId)) {
-            throwException("Error happened in TreeRegressor model: cannot handle general "
-                           "sample weights=%f", weights(dataId));
+          long dataRepeat=static_cast<long>(weights(dataId));
+          if (static_cast<double>(dataRepeat) != weights(dataId)) {
+            throwException("Error happened when training %s model: "
+                           "cannot handle general sample weights=%f",
+                           ModelName, weights(dataId));
           }
-          for (long rep=0; rep<repeatance; ++rep)
+          for (long rep=0; rep<dataRepeat; ++rep)
             trainIndices.push_back(dataId);
         }
 
@@ -152,8 +153,7 @@ namespace CPPLearn
             builder->build(trainData, &tree, &sampleIndicesForThisModel);
           }
           catch(...) {
-            cout<<"Error happened when training  RandomForestClassifier, with tree Id ="
-                <<&tree-&_trees[0]<<endl;
+            printf("exception caught when training %s: ", ModelName);
             throw;
           }
         }

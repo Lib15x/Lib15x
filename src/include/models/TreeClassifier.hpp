@@ -55,12 +55,12 @@ namespace CPPLearn
 
         vector<long> trainIndices;
         for (long dataId=0; dataId<labelData.size(); ++dataId){
-          long repeatance=static_cast<long>(weights(dataId));
-          if (static_cast<double>(repeatance) != weights(dataId)) {
+          long dataRepeat=static_cast<long>(weights(dataId));
+          if (static_cast<double>(dataRepeat) != weights(dataId)) {
             throwException("Error happened in TreeRegressor model: cannot handle general "
                            "sample weights=%f", weights(dataId));
           }
-          for (long rep=0; rep<repeatance; ++rep)
+          for (long rep=0; rep<dataRepeat; ++rep)
             trainIndices.push_back(dataId);
         }
 
