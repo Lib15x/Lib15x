@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 2.6)
 SET(CMAKE_C_COMPILER /usr/bin/gcc-4.9)
 SET(CMAKE_CXX_COMPILER /usr/bin/g++-4.9)
 
-PROJECT(CPPLearn)
-list (APPEND CMAKE_MODULE_PATH "${CPPLearn_SOURCE_DIR}/../cmake")
+PROJECT(Lib15x)
+list (APPEND CMAKE_MODULE_PATH "${Lib15x_SOURCE_DIR}/../cmake")
 
 #include eigen
 SET( EIGEN_DIR "$ENV{EIGEN_DIR}" )
@@ -43,10 +43,10 @@ list(APPEND LIBS ${BLAS_LIBRARIES})
 set(CMAKE_CXX_FLAGS "-Wall -g -D_GLIBCXX_DEBUG -Wextra -Wconversion -O3 -DEIGEN_DEBUG -std=c++1y -pthread ${CMAKE_CXX_FLAGS}")
 
 include (CTest)
-set (CTEST_PROJECT_NAME "CPPLearn")
+set (CTEST_PROJECT_NAME "Lib15x")
 enable_testing()
 
-include_directories(${CPPLearn_SOURCE_DIR}/include/)
+include_directories(${Lib15x_SOURCE_DIR}/include/)
 
 macro (add_executable_by_name name)
   ADD_EXECUTABLE(${name} ${name}.cc)

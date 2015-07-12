@@ -4,8 +4,8 @@
 #include "../core/Definitions.hpp"
 #include "./_BaseCriterion.hpp"
 
-namespace CPPLearn {
-
+namespace Lib15x
+{
   double
   bernoulli(const vector<long>& labelsCount) {
     const long numberOfSamples =

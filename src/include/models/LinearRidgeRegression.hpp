@@ -5,7 +5,7 @@
 #include "../core/Utilities.hpp"
 #include "../internal/_BaseRegressor.hpp"
 
-namespace CPPLearn
+namespace Lib15x
 {
   namespace Models
   {

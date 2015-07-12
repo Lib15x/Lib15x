@@ -1,4 +1,4 @@
-# CPPLearn
+# Lib15x
 development task
 linear regression (ridge, lasso)
 logistic regression (ridge, lasso)

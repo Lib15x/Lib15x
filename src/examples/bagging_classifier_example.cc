@@ -3,7 +3,7 @@
 #include <models/TreeClassifier.hpp>
 #include <models/BaggingClassifier.hpp>
 
-using namespace CPPLearn;
+using namespace Lib15x;
 using LearningModel=Models::BaggingClassifier<>;
 
 int main(int argc, char* argv[])
@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
   constexpr double (*LossFunction)(const Labels&, const Labels&)=LearningModel::LossFunction;
   const string trainfilename="../../data/example/iris.cl";
 
-  const std::pair<MatrixXd, Labels> trainPair= Utilities::readCPPLearnDataFile(trainfilename);
+  const std::pair<MatrixXd, Labels> trainPair= Utilities::readLib15xDataFile(trainfilename);
   const MatrixXd& trainData=trainPair.first;
   const Labels& trainLabels=trainPair.second;
 

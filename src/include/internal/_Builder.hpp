@@ -5,8 +5,8 @@
 #include <stack>
 #include <queue>
 
-namespace CPPLearn{
-
+namespace Lib15x
+{
   template<class _Criterion, template<class Criterion> class _Splitter>
   class _DepthFirstBuilder {
   public:

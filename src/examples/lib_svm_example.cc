@@ -3,7 +3,7 @@
 #include <models/LibSVM.hpp>
 #include <kernels/KernelRBF.hpp>
 
-using namespace CPPLearn;
+using namespace Lib15x;
 
 using Kernel=Kernels::RBF;
 using LearningModel=Models::LibSVM<Kernel>;
@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 
   const string trainfilename="../../data/test/libsvm_train_1.cl";
 
-  const std::pair<MatrixXd, Labels> trainPair= Utilities::readCPPLearnDataFile(trainfilename);
+  const std::pair<MatrixXd, Labels> trainPair= Utilities::readLib15xDataFile(trainfilename);
   const MatrixXd& trainData=trainPair.first;
   const Labels& trainLabels=trainPair.second;
 

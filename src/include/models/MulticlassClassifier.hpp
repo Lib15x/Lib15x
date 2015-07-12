@@ -4,7 +4,7 @@
 #include <core/Definitions.hpp>
 #include "../internal/_BaseClassifier.hpp"
 
-namespace CPPLearn
+namespace Lib15x
 {
   namespace Models
   {

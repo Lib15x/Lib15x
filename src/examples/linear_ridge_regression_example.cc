@@ -5,7 +5,7 @@
 #include <models/LibSVM.hpp>
 #include <kernels/KernelRBF.hpp>
 
-using namespace CPPLearn;
+using namespace Lib15x;
 using LearningModel=Models::LinearRidgeRegression;
 
 int main(int argc, char* argv[])

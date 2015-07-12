@@ -3,7 +3,7 @@
 #---------------------------------------------------------------------------
 # Project related configuration options
 #---------------------------------------------------------------------------
-PROJECT_NAME           = "CPPLearn"
+PROJECT_NAME           = "Lib15x"
 PROJECT_NUMBER         = "0.0.0"
 OUTPUT_DIRECTORY       = ./docs
 CREATE_SUBDIRS         = NO

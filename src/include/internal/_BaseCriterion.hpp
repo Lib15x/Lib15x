@@ -3,8 +3,8 @@
 
 #include "../core/Definitions.hpp"
 
-namespace CPPLearn {
-
+namespace Lib15x
+{
   template <class DerivedCriterion>
   class _BaseCriterion {
   public:

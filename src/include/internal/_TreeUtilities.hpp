@@ -2,8 +2,8 @@
 #define _TREE_UTILITIES
 #include "../core/Definitions.hpp"
 
-namespace CPPLearn {
-
+namespace Lib15x
+{
   struct _StackRecord {
     long _startIndex;
     long _endIndex;

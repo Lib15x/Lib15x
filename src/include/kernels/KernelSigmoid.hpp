@@ -2,9 +2,10 @@
 #define KERNEL_SIGMOID
 #include "../core/Definitions.hpp"
 
-namespace CPPLearn{
-  namespace Kernels{
-
+namespace Lib15x
+{
+  namespace Kernels
+  {
     class Sigmoid{
     public:
       Sigmoid(double gamma, double r) : _gamma{gamma}, _r{r} {}

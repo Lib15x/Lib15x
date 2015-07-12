@@ -5,7 +5,7 @@
 #include <models/MulticlassClassifier.hpp>
 #include <preprocessing/MinMaxScaler.hpp>
 
-using namespace CPPLearn;
+using namespace Lib15x;
 
 using Scaler=Preprocessing::MinMaxScaler;
 using Kernel=Kernels::RBF;
@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
   ignoreUnusedVariables(argc, argv);
   string trainfilename = "../../data/libsvm/train.2.cl";
 
-  std::pair<MatrixXd, Labels> trainPair = Utilities::readCPPLearnDataFile(trainfilename);
+  std::pair<MatrixXd, Labels> trainPair = Utilities::readLib15xDataFile(trainfilename);
   MatrixXd& trainData = trainPair.first;
   Labels& trainLabels = trainPair.second;
 

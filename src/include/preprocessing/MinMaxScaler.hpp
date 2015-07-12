@@ -3,7 +3,7 @@
 
 #include "../core/Definitions.hpp"
 
-namespace CPPLearn
+namespace Lib15x
 {
   namespace Preprocessing
   {

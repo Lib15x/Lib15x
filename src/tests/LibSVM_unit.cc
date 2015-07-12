@@ -5,7 +5,7 @@
 #include <models/LibSVM.hpp>
 #include <gtest/gtest.h>
 
-using namespace CPPLearn;
+using namespace Lib15x;
 
 TEST(LibSVM, RBFKernel_test)
 {

@@ -2,7 +2,7 @@
 #include <core/Utilities.hpp>
 #include <models/TreeRegressor.hpp>
 
-using namespace CPPLearn;
+using namespace Lib15x;
 using LearningModel=Models::TreeRegressor;
 
 int main(int argc, char* argv[])

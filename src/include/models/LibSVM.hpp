@@ -7,7 +7,7 @@
 #include "../external/libsvm.cpp"
 #include "../internal/_BaseClassifier.hpp"
 
-namespace CPPLearn
+namespace Lib15x
 {
   namespace Models
   {

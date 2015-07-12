@@ -2,8 +2,8 @@
 #define _REGRESSION_TREE
 #include "./_BaseTree.hpp"
 
-namespace CPPLearn {
-
+namespace Lib15x
+{
   class _RegressionTree : public _BaseTree<_RegressionTree> {
   public:
     using BaseTree = _BaseTree<_RegressionTree>;

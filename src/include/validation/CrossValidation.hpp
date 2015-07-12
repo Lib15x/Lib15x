@@ -2,7 +2,7 @@
 #define CROSS_VALIDATION
 #include "../core/Definitions.hpp"
 
-namespace CPPLearn
+namespace Lib15x
 {
   /**
    * enter a brief description

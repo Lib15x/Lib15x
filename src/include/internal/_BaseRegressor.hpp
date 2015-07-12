@@ -4,7 +4,7 @@
 #include "../core/Definitions.hpp"
 #include "../core/Utilities.hpp"
 
-namespace CPPLearn
+namespace Lib15x
 {
   namespace Models
   {

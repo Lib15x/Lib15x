@@ -4,8 +4,8 @@
 #include "../core/Definitions.hpp"
 #include "./_BaseCriterion.hpp"
 
-namespace CPPLearn {
-
+namespace Lib15x
+{
   class _RegressionCriterion :
     public _BaseCriterion<_RegressionCriterion> {
   public:

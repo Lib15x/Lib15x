@@ -19,7 +19,7 @@
 #include <Eigen/Sparse>
 
 
-namespace CPPLearn
+namespace Lib15x
 {
   using std::array;
   using std::vector;

@@ -8,7 +8,7 @@
 #include "../internal/_ClassificationTree.hpp"
 #include "../internal/_ClassificationCriterion.hpp"
 
-namespace CPPLearn
+namespace Lib15x
 {
   namespace Models
   {

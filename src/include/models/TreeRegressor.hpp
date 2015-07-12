@@ -8,7 +8,7 @@
 #include "../internal/_RegressionTree.hpp"
 #include "../internal/_RegressionCriterion.hpp"
 
-namespace CPPLearn
+namespace Lib15x
 {
   namespace Models
   {

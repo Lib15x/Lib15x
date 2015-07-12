@@ -2,7 +2,7 @@
 #include <core/Utilities.hpp>
 #include <models/LinearLogisticRegression.hpp>
 
-using namespace CPPLearn;
+using namespace Lib15x;
 
 using LearningModel=Models::LinearLogisticRegression;
 
@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 
   string trainfilename="../../data/libsvm/heart_scale.cl";
 
-  std::pair<MatrixXd, Labels> trainPair= Utilities::readCPPLearnDataFile(trainfilename);
+  std::pair<MatrixXd, Labels> trainPair= Utilities::readLib15xDataFile(trainfilename);
   const MatrixXd& trainData=trainPair.first;
   const Labels& trainLabels=trainPair.second;
 

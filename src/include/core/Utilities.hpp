@@ -6,7 +6,7 @@
 #include <Eigen/Eigenvalues>
 #include <sys/stat.h>
 
-namespace CPPLearn
+namespace Lib15x
 {
   namespace Utilities
   {
@@ -164,7 +164,7 @@ namespace CPPLearn
 
 
     void
-    createCPPLearnDataFileFromLibsvmFormat(const string& libsvmFormatFileName,
+    createLib15xDataFileFromLibsvmFormat(const string& libsvmFormatFileName,
                                                 const string& cpplearnFileName,
                                                 const VerboseFlag verboseFlag=VerboseFlag::Quiet)
     {
@@ -253,7 +253,7 @@ namespace CPPLearn
     }
 
     std::pair<MatrixXd, Labels>
-    readCPPLearnDataFile(const string& filename)
+    readLib15xDataFile(const string& filename)
     {
       ifstream file;
       file.open(filename);
@@ -294,7 +294,7 @@ namespace CPPLearn
         getline(file, line);
         if (line == ""){
           throwException("line number (%lu) is an empty line in the middel, "
-                         "which is forbidden by CPPLearn data format\n",
+                         "which is forbidden by Lib15x data format\n",
                          lineIndex);
         }
 

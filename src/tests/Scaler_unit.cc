@@ -4,7 +4,7 @@
 #include <preprocessing/MinMaxScaler.hpp>
 #include <gtest/gtest.h>
 
-using namespace CPPLearn;
+using namespace Lib15x;
 
 TEST(Scaler, Standard_test)
 {

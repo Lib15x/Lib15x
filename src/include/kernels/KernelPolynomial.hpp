@@ -3,10 +3,11 @@
 
 #include "../core/Definitions.hpp"
 
-namespace CPPLearn{
-  namespace Kernels{
-
-    class Polynomial{
+namespace Lib15x
+{
+  namespace Kernels
+  {
+    class Polynomial {
     public:
       Polynomial(long d, double gamma, double r) :
         _d{d}, _gamma{gamma}, _r{r} {

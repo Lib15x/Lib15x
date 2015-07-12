@@ -4,7 +4,8 @@
 #include "../core/Utilities.hpp"
 #include "./_TreeUtilities.hpp"
 
-namespace CPPLearn {
+namespace Lib15x
+{
   template<class _Criterion>
   class _BestSplitter {
   public:

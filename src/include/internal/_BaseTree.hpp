@@ -2,8 +2,8 @@
 #define _BASE_TREE
 #include "../core/Definitions.hpp"
 
-namespace CPPLearn {
-
+namespace Lib15x
+{
   template<class DerivedTree>
   class _BaseTree {
   public:

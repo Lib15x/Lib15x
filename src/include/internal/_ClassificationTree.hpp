@@ -2,8 +2,8 @@
 #define _CLASSIFICATION_TREE
 #include "./_BaseTree.hpp"
 
-namespace CPPLearn {
-
+namespace Lib15x
+{
   class _ClassificationTree : public _BaseTree<_ClassificationTree> {
   public:
     using BaseTree = _BaseTree<_ClassificationTree>;

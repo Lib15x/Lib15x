@@ -6,7 +6,7 @@
 #include <models/MulticlassClassifier.hpp>
 #include <preprocessing/MinMaxScaler.hpp>
 
-using namespace CPPLearn;
+using namespace Lib15x;
 
 using Scaler=Preprocessing::MinMaxScaler;
 using Kernel=Kernels::RBF;
@@ -20,8 +20,8 @@ int main(int argc, char* argv[])
   const string trainfilename = "../../data/libsvm/glass.scale.cl";
   const string testfilename = "../../data/libsvm/glass.scale.cl";
 
-  std::pair<MatrixXd, Labels> trainPair= Utilities::readCPPLearnDataFile(trainfilename);
-  std::pair<MatrixXd, Labels> testPair= Utilities::readCPPLearnDataFile(testfilename);
+  std::pair<MatrixXd, Labels> trainPair= Utilities::readLib15xDataFile(trainfilename);
+  std::pair<MatrixXd, Labels> testPair= Utilities::readLib15xDataFile(testfilename);
 
   MatrixXd& trainData=trainPair.first;
   const Labels& trainLabels=trainPair.second;

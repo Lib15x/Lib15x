@@ -3,9 +3,10 @@
 
 #include "../core/Definitions.hpp"
 
-namespace CPPLearn{
-  namespace Kernels{
-
+namespace Lib15x
+{
+  namespace Kernels
+  {
     class Dot{
     public:
       Dot(){}
