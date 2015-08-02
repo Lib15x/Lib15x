@@ -1,8 +1,6 @@
-#include <core/Definitions.hpp>
-#include <core/Utilities.hpp>
-#include <models/GradientBoostingRegressor.hpp>
-
+#include <Lib15x.hpp>
 using namespace Lib15x;
+
 using LearningModel=Models::GradientBoostingRegressor;
 
 int main(int argc, char* argv[])

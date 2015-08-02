@@ -1,9 +1,6 @@
-#include <core/Definitions.hpp>
-#include <core/Utilities.hpp>
-#include <models/TreeClassifier.hpp>
-#include <models/BaggingClassifier.hpp>
-
+#include <Lib15x.hpp>
 using namespace Lib15x;
+
 using LearningModel=Models::BaggingClassifier<>;
 
 int main(int argc, char* argv[])

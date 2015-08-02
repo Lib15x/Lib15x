@@ -1,11 +1,6 @@
-#include <core/Definitions.hpp>
-#include <models/LinearRidgeRegression.hpp>
-#include <core/Definitions.hpp>
-#include <core/Utilities.hpp>
-#include <models/LibSVM.hpp>
-#include <kernels/KernelRBF.hpp>
-
+#include <Lib15x.hpp>
 using namespace Lib15x;
+
 using LearningModel=Models::LinearRidgeRegression;
 
 int main(int argc, char* argv[])

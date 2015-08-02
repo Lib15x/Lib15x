@@ -1,10 +1,4 @@
-#include <core/Definitions.hpp>
-#include <models/LibSVM.hpp>
-#include <kernels/KernelRBF.hpp>
-#include <validation/CrossValidation.hpp>
-#include <models/MulticlassClassifier.hpp>
-#include <preprocessing/MinMaxScaler.hpp>
-
+#include <Lib15x.hpp>
 using namespace Lib15x;
 
 using Scaler=Preprocessing::MinMaxScaler;
@@ -36,7 +30,7 @@ int main(int argc, char* argv[])
   MulticlassModel multiclassModel{numberOfFeatures, numberOfClasses, binaryModel};
 
   VectorXd losses=crossValidation.computeValidationLosses(&multiclassModel);
-  cout<<1-losses.mean()<<endl;
+  cout<<"cross validation error ="<<losses.mean()<<endl;
 
   return 0;
 }

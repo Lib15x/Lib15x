@@ -1,7 +1,4 @@
-#include <core/Definitions.hpp>
-#include <core/Utilities.hpp>
-#include <models/LinearLogisticRegression.hpp>
-
+#include <Lib15x.hpp>
 using namespace Lib15x;
 
 using LearningModel=Models::LinearLogisticRegression;

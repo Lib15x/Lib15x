@@ -1,11 +1,4 @@
-#include <core/Definitions.hpp>
-#include <core/Utilities.hpp>
-#include <models/LibSVM.hpp>
-#include <kernels/KernelRBF.hpp>
-#include <kernels/KernelDot.hpp>
-#include <models/MulticlassClassifier.hpp>
-#include <preprocessing/MinMaxScaler.hpp>
-
+#include <Lib15x.hpp>
 using namespace Lib15x;
 
 using Scaler=Preprocessing::MinMaxScaler;
