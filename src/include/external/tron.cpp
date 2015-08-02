@@ -3,6 +3,10 @@
 #include <string.h>
 #include <stdarg.h>
 #include "tron.h"
+#include "./blas/daxpy.c"
+#include "./blas/ddot.c"
+#include "./blas/dnrm2.c"
+#include "./blas/dscal.c"
 
 #ifndef min
 template <class T> static inline T min(T x,T y) { return (x<y)?x:y; }
@@ -16,10 +20,10 @@ template <class T> static inline T max(T x,T y) { return (x>y)?x:y; }
 extern "C" {
 #endif
 
-extern double dnrm2_(int *, double *, int *);
-extern double ddot_(int *, double *, int *, double *, int *);
-extern int daxpy_(int *, double *, double *, int *, double *, int *);
-extern int dscal_(int *, double *, double *, int *);
+//extern double dnrm2_(int *, double *, int *);
+//extern double ddot_(int *, double *, int *, double *, int *);
+//extern int daxpy_(int *, double *, double *, int *, double *, int *);
+//extern int dscal_(int *, double *, double *, int *);
 
 #ifdef __cplusplus
 }
